@@ -1,0 +1,5 @@
+5.	(#, Invalid input) 
+23.	(void$, Invalid input) 
+26.	(f$, Invalid input) (a$, Invalid input) 
+28.	(/, Invalid input) 
+35.	(*/, Unmatched comment) (/, Invalid input) (*/, Unmatched comment) 
