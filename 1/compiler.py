@@ -83,7 +83,7 @@ def buildDFA():
     # whether we should redo a character or not
     should_redo = [0 for i in range(num_states + 1)]
     should_redo[3] = should_redo[7] = should_redo[8] = should_redo[13] = should_redo[18] = should_redo[22] = 1
-    state_type[0] = state_type[7] = state_type[15] = state_type[19] = state_type[23] = 'ERROR'
+    state_type[0] = state_type[4] = state_type[7] = state_type[15] = state_type[19] = state_type[23] = 'ERROR'
     state_type[3] = 'NUM'
     state_type[5] = "SYMBOL"
     state_type[8] = 'SYMBOL'
@@ -112,6 +112,7 @@ symbol_table = []
 
 line_number = 1
 cc_line_number = 1
+
 
 while pointer < length:
     current_char = content[pointer]

@@ -1,4 +1,1 @@
-5.	(#, Invalid input)
-23.	(void$, Invalid input)
-26.	(f$, Invalid input) (a$, Invalid input)
-35.	(*/, Unmatched comment) (*/, Unmatched comment)
+11.	(1d, Invalid number)
