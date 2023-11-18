@@ -6,8 +6,8 @@ symbol_file = open("symbol_table.txt", "w")
 tokens_file = open("tokens.txt", "w")
 
 content = input_file.read()
+content += "\n"
 length = len(content)
-
 
 SYMBOLS = list(';:,[](){}+-*=</')
 WHITESPACES = [chr(32), chr(10), chr(13), chr(9), chr(11), chr(12)]
@@ -83,9 +83,10 @@ def buildDFA():
     # whether we should redo a character or not
     should_redo = [0 for i in range(num_states + 1)]
     should_redo[3] = should_redo[7] = should_redo[8] = should_redo[13] = should_redo[18] = should_redo[22] = 1
-    state_type[0] = state_type[4] = state_type[7] = state_type[15] = state_type[19] = state_type[23] = 'ERROR'
+    state_type[0] = state_type[4] = state_type[15] = state_type[19] = state_type[23] = 'ERROR'
     state_type[3] = 'NUM'
     state_type[5] = "SYMBOL"
+    state_type[7] = "SYMBOL"
     state_type[8] = 'SYMBOL'
     state_type[11] = 'COMMENT'
     state_type[13] = 'SYMBOL'
@@ -108,11 +109,10 @@ all_tokens = []
 line_tokens = []
 all_errors = []
 line_errors = []
-symbol_table = []
+symbol_table = ["if", "else", "void", "int", "while", "break", "return"]
 
 line_number = 1
 cc_line_number = 1
-
 
 while pointer < length:
     current_char = content[pointer]
@@ -166,10 +166,10 @@ while pointer < length:
         if did_forward == 0:
             pointer += 1
 
-if current_state == 9 or current_state == 10 or current_state == 11:  # todo
+if current_state == 9 or current_state == 10 or current_state == 11:
     if len(attribute) > 7:
         all_errors[cc_line_number -
-                   1].append(attribute[:7] + "...", "Unclosed comment")
+                   1].append([attribute[:7] + "...", "Unclosed comment"])
     else:
         all_errors[cc_line_number - 1].append([attribute, "Unclosed comment"])
 

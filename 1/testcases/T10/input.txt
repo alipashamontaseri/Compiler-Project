@@ -4,7 +4,7 @@ vod min(voi$$){
 		if(arr[efg] === 3)
 			b = b + 2;
 			return;
-		else (arr[ef%g] // var)
+		else (arr[ef%g] // arr)
 		{
 			x = 5;
 			b = u * 123;
