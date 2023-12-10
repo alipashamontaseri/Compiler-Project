@@ -92,11 +92,16 @@ class DFA:
 
 
 class Scanner:
-    def __init__(self, inputfile="input.txt"):
+    def __init__(self, inputfile, tokens_file, lexical_errors_file, symbol_table_file):
+        self.tokens_file = tokens_file
+        self.lexical_errors_file = lexical_errors_file
+        self.symbol_table_file = symbol_table_file
+
         with open(inputfile, "r") as f:
             self.content = f.read()
             self.content += "\n"
             self.length = len(self.content)
+
         self.current_state = 1
         self.pointer = 0
         self.all_tokens = []
@@ -110,9 +115,8 @@ class Scanner:
         
         self.dfa = DFA()
 
-        
-    def write_errors(self, filepath="lexical_errors.txt"):
-        with open(filepath, 'w') as f:
+    def write_errors(self):
+        with open(self.lexical_errors_file, 'w') as f:
             line_no = 0
             have_written = False
             for error_line in self.all_errors:
@@ -131,9 +135,8 @@ class Scanner:
             if not have_written:
                 f.write("There is no lexical error.")
 
-
-    def write_tokens(self, filepath="tokens.txt"):
-        with open(filepath, "w") as f:
+    def write_tokens(self):
+        with open(self.tokens_file, "w") as f:
             line_no = 0
 
             for token_line in self.all_tokens:
@@ -150,13 +153,17 @@ class Scanner:
                     f.write("(" + token[0] + ", " + token[1] + ")")
                 f.write("\n")
 
-
-    def write_symbol_table(self, filepath="symbol_table.txt"):
-        with open(filepath, "w") as f:
+    def write_symbol_table(self):
+        with open(self.symbol_table_file, "w") as f:
             cnt = 0
             for k in self.symbol_table:
                 cnt += 1
                 f.write(str(cnt) + ".\t" + k + "\n")
+
+    def write_logs(self):
+        self.write_errors()
+        self.write_tokens()
+        self.write_symbol_table()
 
     def get_next_token(self):
         current_token = ""
