@@ -6,12 +6,10 @@ parent = os.path.dirname(current)
 sys.path.append(parent)
 
 if __name__ == "__main__":
-    scanner = Scanner("input.txt")
     
     ## Phase 1
     while scanner.get_next_token() != "$":
         continue
-
 
     scanner.write_errors()
     scanner.write_symbol_table()
