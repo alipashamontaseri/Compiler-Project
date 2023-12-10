@@ -1,0 +1,15 @@
+1.	void
+2.	b
+3.	break
+4.	efg
+5.	g
+6.	min
+7.	x
+8.	else
+9.	int
+10.	vod
+11.	while
+12.	arr
+13.	u
+14.	return
+15.	if

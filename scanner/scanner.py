@@ -218,7 +218,10 @@ class Scanner:
                 if did_forward == 0:
                     self.pointer += 1
             if token_found:
-                return self.line_tokens[-1]
+                if len(self.line_tokens):
+                    return self.line_tokens[-1]
+                else:
+                    return self.all_tokens[-1][-1]
 
         current_state = self.dfa.current_state
 
