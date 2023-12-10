@@ -6,5 +6,6 @@ parent = os.path.dirname(current)
 sys.path.append(parent)
 
 if __name__ == "__main__":
-    tester = Tester(os.path.join(os.getcwd(), "test_data", "P2"))
-    tester.test(phase=2)
+    phase = 1
+    tester = Tester(os.path.join(os.getcwd(), "test_data", "P" + str(phase)))
+    tester.test(phase, keep_output=False)

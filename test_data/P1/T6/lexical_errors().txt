@@ -1,2 +1,0 @@
-2.	(*/, Unmatched comment)
-16.	(/*void ..., Unclosed comment)

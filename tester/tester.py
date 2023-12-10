@@ -6,7 +6,7 @@ class Tester:
     def __init__(self, test_dir):
         self.test_dir = test_dir
         
-    def test(self, phase=1, num_tests=10, passive=False):
+    def test(self, phase=1, num_tests=10, passive=False, keep_output=True):
         ok = True
 
         print(f"Testing the testcases of phase{phase} ...")
@@ -52,6 +52,12 @@ class Tester:
                 ok = False
                 if not passive:
                     break
+            if not keep_output:
+                for file in targets:
+                    try:
+                        os.remove(f"(){file}.txt")
+                    except Exception as e:
+                        continue
         if ok:
             print("All tests has been passed successfully!")
         
