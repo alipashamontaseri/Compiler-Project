@@ -8,8 +8,8 @@ sys.path.append(parent)
 
 class Compiler:
     def __init__(self, inputfile="input.txt", compile_mode="full",
-    verbose_scanner=False,
-    verbose_parser=False,
+    log_scanner=False,
+    log_parser=False,
     tokens_file="tokens.txt",
     lexical_errors_file="lexical_errors.txt",
     symbol_table_file="symbol_table.txt",
@@ -18,8 +18,8 @@ class Compiler:
     ):
 
         self.input_file = inputfile
-        self.verbose_scanner = verbose_scanner
-        self.verbose_parser = verbose_parser
+        self.log_scanner = log_scanner
+        self.log_parser = log_parser
         self.compile_mode = compile_mode
 
         scanner = Scanner(inputfile, tokens_file=tokens_file,
@@ -38,19 +38,19 @@ class Compiler:
         elif self.compile_mode in ["parser", "full"]:
             self.parser.start_parsing()
     
-        if self.verbose_scanner:
+        if self.log_scanner:
             self.scanner.write_logs()
 
-        if self.verbose_parser:
+        if self.log_parser:
             self.parser.write_logs()
 
 
 if __name__ == "__main__":
     
     ## Phase 1
-    compiler = Compiler(compile_mode='scanner')
+    compiler = Compiler(compile_mode='scanner', log_scanner=True)
 
     ## Phase 2
-    compiler = Compiler()
+    compiler = Compiler(compile_mode='full', log_parser=True)
 
     compiler.compile()

@@ -96,13 +96,15 @@ class Token:
         self.lexeme = lexeme
         self.line_number = line_number
     
-    def get_termianl(self):
-        if self.token_class[0] in ["ID", "NUM"]:
+    def get_terminal(self):
+        if self.token_class in ["ID", "NUM"]:
             return self.token_class
         
         return self.lexeme
 
     def __repr__(self):
+        if self.token_class == "END_TOKEN":
+            return self.lexeme
         return f"({self.token_class}, {self.lexeme})"
 
 
@@ -254,5 +256,5 @@ class Scanner:
             else:
                 self.all_errors[self.cc_line_number - 1].append([current_token, "Unclosed comment"])
         
-        return "$"
+        return Token("END_TOKEN", "$", "$")
         

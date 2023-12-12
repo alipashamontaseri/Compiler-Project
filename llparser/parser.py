@@ -5,7 +5,7 @@ from .constants import firsts, follows, terminals, rules
 # from .utils import load_dict
 
 END_TOKEN = "$"
-EPSILON = 'epsilon'
+EPSILON = 'EPSILON'
 
 class Parser:
     def __init__(self, scanner, parse_tree_file, syntax_errors_file):
@@ -49,8 +49,8 @@ class Parser:
     def get_next_token(self):
         return self.scanner.get_next_token()
 
-    def add_node(self, name, parent):
-        node = None
+    def add_node(self, name, parent, token=None):
+
         if not parent:
             node = self.root = Node(name)
         else:
@@ -60,22 +60,19 @@ class Parser:
     def start_parsing(self):
         look_ahead = self.get_next_token()
         self.root = self.add_node(self.non_terminals[0], None)
-        stack = [(self.non_terminals[0], self.root)]
+        stack = [("$", None), (self.non_terminals[0], self.root)]
         
         while True:
-            print(stack)
-            if stack[-1][0] == END_TOKEN == look_ahead:
+            if stack[-1][0] == END_TOKEN == look_ahead.get_terminal():
                 return
-            if look_ahead.get_termianl() == stack[-1][0]:
-                print('hey')
+
+            if look_ahead.get_terminal() == stack[-1][0]:
                 stack.pop(-1)
                 look_ahead = self.get_next_token()
                 continue
-            print(stack, '#')
             current_node = stack[-1][1]
-            action = self.parse_table[stack[-1][0]][look_ahead.get_termianl()]
-            print(action)
-            print(look_ahead.get_termianl())
+            action = self.parse_table[stack[-1][0]][look_ahead.get_terminal()]
+            
             if not action:
                 stack.pop(-1)
             elif len(action) == 0:
@@ -83,8 +80,8 @@ class Parser:
                 pass
             else:
                 stack.pop(-1)
-                for part in action:
-                    stack.push((part, Node(part, parent=current_node)))
+                for part in reversed(action):
+                    stack.append((part, self.add_node(part, parent=current_node)))
             
             
     def write_parse_tree(self):
@@ -98,7 +95,6 @@ class Parser:
             else:
                 f.writelines(self.errors)
             
-
     def write_logs(self):
         self.write_parse_tree()
         self.write_syntax_errors()
