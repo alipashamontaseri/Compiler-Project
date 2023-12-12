@@ -36,7 +36,7 @@ class Compiler:
             while self.scanner.get_next_token() != "$":
                 continue
         elif self.compile_mode in ["parser", "full"]:
-            pass
+            self.parser.start_parsing()
     
         if self.verbose_scanner:
             self.scanner.write_logs()
@@ -48,6 +48,9 @@ class Compiler:
 if __name__ == "__main__":
     
     ## Phase 1
+    compiler = Compiler(compile_mode='scanner')
 
     ## Phase 2
-    pass
+    compiler = Compiler()
+
+    compiler.compile()
