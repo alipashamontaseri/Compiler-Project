@@ -90,6 +90,21 @@ class DFA:
         
         return self.current_state
 
+class Token:
+    def __init__(self, token_class, lexeme, line_number):
+        self.token_class = token_class
+        self.lexeme = lexeme
+        self.line_number = line_number
+    
+    def get_termianl(self):
+        if self.token_class[0] in ["ID", "NUM"]:
+            return self.token_class
+        
+        return self.lexeme
+
+    def __repr__(self):
+        return f"({self.token_class}, {self.lexeme})"
+
 
 class Scanner:
     def __init__(self, inputfile, tokens_file, lexical_errors_file, symbol_table_file):
@@ -150,7 +165,7 @@ class Scanner:
                     if cnt > 0:
                         f.write(" ")
                     cnt += 1
-                    f.write("(" + token[0] + ", " + token[1] + ")")
+                    f.write(str(token))
                 f.write("\n")
 
     def write_symbol_table(self):
@@ -194,11 +209,11 @@ class Scanner:
                 current_token = ""
 
             if state_type[next_state] == 'NUM':
-                self.line_tokens.append(["NUM", current_token])
+                self.line_tokens.append(Token("NUM", current_token, len(self.all_tokens) + 1))
                 token_found = True
 
             if state_type[next_state] == 'SYMBOL':
-                self.line_tokens.append(["SYMBOL", current_token])
+                self.line_tokens.append(Token("SYMBOL", current_token, len(self.all_tokens) + 1))
                 token_found = True
             
             if state_type[next_state] in ['WHITESPACE', 'COMMENT']:
@@ -212,9 +227,9 @@ class Scanner:
                 if current_token not in self.symbol_table:  # this has high complexity maybe I should fix it later
                     self.symbol_table.append(current_token)
                 if current_token in KEYWORDS:
-                    self.line_tokens.append(["KEYWORD", current_token])
+                    self.line_tokens.append(Token("KEYWORD", current_token, len(self.all_tokens) + 1))
                 else:
-                    self.line_tokens.append(["ID", current_token])
+                    self.line_tokens.append(Token("ID", current_token, len(self.all_tokens) + 1))
                 token_found = True
 
             if current_char == '\n':
@@ -240,3 +255,4 @@ class Scanner:
                 self.all_errors[self.cc_line_number - 1].append([current_token, "Unclosed comment"])
         
         return "$"
+        

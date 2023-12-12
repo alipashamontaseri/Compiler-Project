@@ -23,7 +23,7 @@ def save_dict(dictionary, filepath):
     with open(filepath, 'w') as f:
         f.write(json.dumps(dictionary))
 
-def load_set(filepath):
+def load_dict(filepath):
     with open(filepath, 'r') as f:
         return json.loads(f.read())
 

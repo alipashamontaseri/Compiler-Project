@@ -1,9 +1,11 @@
 import os
+from collections import defaultdict
 from anytree import Node, RenderTree
-from .utils import load_set
-from .constants import firsts, follows, terminals
+from .constants import firsts, follows, terminals, rules
+# from .utils import load_dict
 
 END_TOKEN = "$"
+EPSILON = 'epsilon'
 
 class Parser:
     def __init__(self, scanner, parse_tree_file, syntax_errors_file):
@@ -11,45 +13,92 @@ class Parser:
         self.parse_tree_file = parse_tree_file
         self.syntax_errors_file = syntax_errors_file
 
-        self.look_ahead = scanner.get_next_token()
-
         # self.firsts = load_set(os.path.join("llparser", "grammar", "first.set"))
         # self.follows = load_set(os.path.join("llparser", "grammar", "follow.set"))
 
         self.non_terminals = list(firsts.keys())
 
-        self.parse_tree = None
+        parse_table = defaultdict(lambda: defaultdict(lambda: []))
 
-        self.parse_table = {}
+        self.errors = []
 
-        for nt in non_terminals:
-            for terminal in terminals:
-                pass
+        for nt in self.non_terminals:
+            for rule in rules[nt]:
+                if not len(rule):
+                    continue
 
-    def match(self, to_be_matched):
-        pass
+                first = rule[0]
+                
+                if first in terminals:
+                    parse_table[nt][first] = rule
+                    continue
+
+                for terminal in firsts[first]:
+                    if terminal == EPSILON:
+                        for t in follows[first]:
+                            parse_table[nt][t] = rule
+                    else:
+                        parse_table[nt][terminal] = rule
+
+            for terminal in follows[nt]:
+                if not len(parse_table[nt][terminal]):
+                    parse_table[nt][terminal] = None
+
+        self.parse_table = parse_table
+
+    def get_next_token(self):
+        return self.scanner.get_next_token()
+
+    def add_node(self, name, parent):
+        node = None
+        if not parent:
+            node = self.root = Node(name)
+        else:
+            node = Node(name, parent=parent)
+        return node
 
     def start_parsing(self):
-        stack = [self.non_terminals[0]]
+        look_ahead = self.get_next_token()
+        self.root = self.add_node(self.non_terminals[0], None)
+        stack = [(self.non_terminals[0], self.root)]
         
         while True:
-            if self.stack[-1] == END_TOKEN == self.look_ahead:
+            print(stack)
+            if stack[-1][0] == END_TOKEN == look_ahead:
                 return
+            if look_ahead.get_termianl() == stack[-1][0]:
+                print('hey')
+                stack.pop(-1)
+                look_ahead = self.get_next_token()
+                continue
+            print(stack, '#')
+            current_node = stack[-1][1]
+            action = self.parse_table[stack[-1][0]][look_ahead.get_termianl()]
+            print(action)
+            print(look_ahead.get_termianl())
+            if not action:
+                stack.pop(-1)
+            elif len(action) == 0:
+                # error
+                pass
+            else:
+                stack.pop(-1)
+                for part in action:
+                    stack.push((part, Node(part, parent=current_node)))
+            
             
     def write_parse_tree(self):
-        pass
+        for pre, _, node in RenderTree(self.root):
+            print("%s%s" % (pre, node.name))
 
     def write_syntax_errors(self):
-        pass
+        with open(self.syntax_errors_file, "w") as f:
+            if not len(self.errors):
+                f.write("There is no syntax error.")
+            else:
+                f.writelines(self.errors)
+            
 
     def write_logs(self):
         self.write_parse_tree()
         self.write_syntax_errors()
-
-A = Node("A")
-B = Node("B", parent=A)
-C = Node("C", parent=A)
-D = Node("D", parent=C)
-
-for pre, _, node in RenderTree(A):
-    print("%s%s" % (pre, node.name))
