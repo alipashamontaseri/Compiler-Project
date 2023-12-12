@@ -44,4 +44,4 @@ def read_rules(filepath):
 
 # save_dict(read_set_from_file(os.path.join("grammar", "First-Sets.txt")), os.path.join("grammar", "first.set"))
 # save_dict(read_set_from_file(os.path.join("grammar", "Follow-Sets.txt")), os.path.join("grammar", "follow.set"))
-# save_dict(read_rules(os.path.join("grammar", "Grammar.txt")), os.path.join("grammar", "rules"))
+save_dict(read_rules(os.path.join("grammar", "Grammar.txt")), os.path.join("grammar", "rules"))

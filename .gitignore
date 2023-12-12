@@ -1,4 +1,6 @@
 input.txt
+parse_tree.txt
+syntax_errors.txt
 P2_TestCases/
 **__pycache__**
 *()*.txt
