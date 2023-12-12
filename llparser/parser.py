@@ -1,4 +1,5 @@
 import os
+import anytree
 from utils import load_set
 
 class Parser:
@@ -10,6 +11,15 @@ class Parser:
         self.look_ahead = None
         self.firsts = load_set(os.path.join("grammar", "first.set"))
         self.follows = load_set(os.path.join("grammar", "follow.set"))
+
+        self.parse_tree = None
+
+    def match(self, to_be_matched):
+        pass
+
+
+    def start_parsing(self):
+        pass
 
     def write_parse_tree(self):
         pass
