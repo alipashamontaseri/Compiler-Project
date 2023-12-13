@@ -260,5 +260,5 @@ class Scanner:
             else:
                 self.all_errors[self.cc_line_number - 1].append([current_token, "Unclosed comment"])
         
-        return Token("END_TOKEN", "$", "$")
+        return Token("END_TOKEN", "$", len(self.all_tokens))
         

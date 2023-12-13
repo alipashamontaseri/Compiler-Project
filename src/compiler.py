@@ -36,7 +36,11 @@ class Compiler:
             while self.scanner.get_next_token().get_terminal() != "$":
                 continue
         elif self.compile_mode in ["parser", "full"]:
-            self.parser.start_parsing()
+            try:
+                self.parser.start_parsing()
+            except Exception as e:
+                print("The following error has been occured during parsing:")
+                print(e)
     
         if self.log_scanner:
             self.scanner.write_logs()

@@ -43,6 +43,7 @@ class Tester:
                 compiler.compile()
             except Exception as e:
                 print(e)
+                cnt_all += 1
                 continue
             correct = True
             
