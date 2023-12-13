@@ -19,8 +19,6 @@ def get_correct_non_terminal_name(name):
             upper = False
     return correct_name
 
-
-
 class Parser:
     def __init__(self, scanner, parse_tree_file, syntax_errors_file):
         self.scanner = scanner
@@ -65,7 +63,7 @@ class Parser:
 
     def get_next_token(self):
         t = self.scanner.get_next_token()
-        # print(t)
+        # print("Reading input, current_terminal:", t)
         return t
 
     def add_node(self, name, parent):
@@ -89,7 +87,7 @@ class Parser:
         current_path = []
         
         while True:
-            # print(stack)
+            # print("Stack:", stack)
             if not stack[-1]:
                 stack.pop(-1)
                 current_path.pop(-1)
@@ -113,9 +111,9 @@ class Parser:
                 continue
             
             action = self.parse_table[current_node][look_ahead.get_terminal()]
-            # print(f"Action[{current_node}][{look_ahead.get_terminal()}] = [{action}]")
+            # print(f"Action[{current_node}][{look_ahead.get_terminal()}] = {action}")
             
-            if not action:
+            if action is None:
                 if self.has_epsilon[current_node]:
                     node_of_tree = self.add_node(get_correct_non_terminal_name(current_node), current_path[-1] if len(current_path) else None)
                     self.add_node("epsilon", node_of_tree)
@@ -126,6 +124,7 @@ class Parser:
                     look_ahead = self.get_next_token()
             elif len(action) == 0:
                 # error
+                return
                 pass
             else:
                 node_of_tree = self.add_node(get_correct_non_terminal_name(current_node), current_path[-1] if len(current_path) else None)
@@ -146,7 +145,7 @@ class Parser:
             f.write('\n'.join(lines))
 
     def write_syntax_errors(self):
-        with open(self.syntax_errors_file, "w") as f:
+        with open(self.syntax_errors_file, "w", encoding="utf-8") as f:
             if not len(self.errors):
                 f.write("There is no syntax error.")
             else:

@@ -48,7 +48,7 @@ class Compiler:
 if __name__ == "__main__":
     
     ## Phase 1
-    compiler = Compiler(compile_mode='scanner', log_scanner=True)
+    # compiler = Compiler(compile_mode='scanner', log_scanner=True)
 
     ## Phase 2
     compiler = Compiler(compile_mode='full', log_parser=True)

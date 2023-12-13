@@ -72,7 +72,8 @@ VarCallPrime ( Args )
 VarCallPrime VarPrime
 VarPrime [ Expression ]
 VarPrime 
-FactorPrime (
+FactorPrime ( Args )
+FactorPrime 
 FactorZegond ( Expression )
 FactorZegond NUM
 Args ArgList

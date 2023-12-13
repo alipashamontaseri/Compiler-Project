@@ -40,7 +40,7 @@
 40. Factor -> ( Expression ) | ID VarCallPrime | NUM
 41. VarCallPrime -> ( Args ) | VarPrime
 42. VarPrime -> [ Expression ] | EPSILON
-43. FactorPrime -> (
+43. FactorPrime -> ( Args ) | EPSILON
 44. FactorZegond -> ( Expression ) | NUM
 45. Args -> ArgList | EPSILON
 46. ArgList -> Expression ArgListPrime

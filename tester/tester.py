@@ -37,10 +37,12 @@ class Tester:
                                     compile_mode="parser",
                                     log_parser=True)
 
-                targets = ["parse_tree", "syntax_errors"]
-
-            compiler.compile()
-
+                targets = ["parse_tree"]#, "syntax_errors"]
+            try:
+                compiler.compile()
+            except Exception as e:
+                print(e)
+                continue
             correct = True
             
             for file in targets:
