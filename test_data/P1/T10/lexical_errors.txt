@@ -1,3 +1,1 @@
-1.	(voi$, Invalid input) ($, Invalid input) 
-2.	(TT%, Invalid input) (^, Invalid input) (&, Invalid input) 
-7.	(ef%, Invalid input) 
+22.	(/*comme..., Unclosed comment) 

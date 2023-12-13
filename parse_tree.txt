@@ -35,8 +35,9 @@ Program
 │   │               │   │       │           └── SimpleExpressionZegond
 │   │               │   │       │               ├── AdditiveExpressionZegond
 │   │               │   │       │               │   ├── TermZegond
-│   │               │   │       │               │   │   ├── FactorZegond
-│   │               │   │       │               │   │   │   └── (NUM, 10)
+│   │               │   │       │               │   │   ├── SignedFactorZegond
+│   │               │   │       │               │   │   │   └── FactorZegond
+│   │               │   │       │               │   │   │       └── (NUM, 10)
 │   │               │   │       │               │   │   └── G
 │   │               │   │       │               │   │       └── epsilon
 │   │               │   │       │               │   └── D

@@ -8,4 +8,4 @@ sys.path.append(parent)
 if __name__ == "__main__":
     phase = 1
     tester = Tester(os.path.join(os.getcwd(), "test_data", "P" + str(phase)))
-    tester.test(phase, keep_output=False)
+    tester.test(phase, keep_output=True, passive=True)

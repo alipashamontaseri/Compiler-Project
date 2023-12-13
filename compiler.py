@@ -33,7 +33,7 @@ class Compiler:
 
     def compile(self):
         if self.compile_mode == "scanner":
-            while self.scanner.get_next_token() != "$":
+            while self.scanner.get_next_token().get_terminal() != "$":
                 continue
         elif self.compile_mode in ["parser", "full"]:
             self.parser.start_parsing()

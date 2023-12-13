@@ -65,7 +65,7 @@ class Parser:
 
     def get_next_token(self):
         t = self.scanner.get_next_token()
-        print(t)
+        # print(t)
         return t
 
     def add_node(self, name, parent):
@@ -89,7 +89,7 @@ class Parser:
         current_path = []
         
         while True:
-            print(stack)
+            # print(stack)
             if not stack[-1]:
                 stack.pop(-1)
                 current_path.pop(-1)
@@ -113,7 +113,7 @@ class Parser:
                 continue
             
             action = self.parse_table[current_node][look_ahead.get_terminal()]
-            print(f"Action[{current_node}][{look_ahead.get_terminal()}] = [{action}]")
+            # print(f"Action[{current_node}][{look_ahead.get_terminal()}] = [{action}]")
             
             if not action:
                 if self.has_epsilon[current_node]:
@@ -141,7 +141,7 @@ class Parser:
             lines = []
             for pre, _, node in RenderTree(self.root):
                 line = "%s%s" % (pre, node.name)
-                print(line)
+                # print(line)
                 lines.append(line)
             f.write('\n'.join(lines))
 

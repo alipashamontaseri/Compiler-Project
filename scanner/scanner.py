@@ -114,12 +114,11 @@ class Scanner:
         self.lexical_errors_file = lexical_errors_file
         self.symbol_table_file = symbol_table_file
 
-        with open(inputfile, "r") as f:
+        with open(inputfile, "r", encoding='utf-8') as f:
             self.content = f.read()
             self.content += "\n"
             self.length = len(self.content)
 
-        self.current_state = 1
         self.pointer = 0
         self.all_tokens = []
         self.line_tokens = []
@@ -133,7 +132,7 @@ class Scanner:
         self.dfa = DFA()
 
     def write_errors(self):
-        with open(self.lexical_errors_file, 'w') as f:
+        with open(self.lexical_errors_file, 'w', encoding='utf-8') as f:
             line_no = 0
             have_written = False
             for error_line in self.all_errors:
@@ -153,7 +152,7 @@ class Scanner:
                 f.write("There is no lexical error.")
 
     def write_tokens(self):
-        with open(self.tokens_file, "w") as f:
+        with open(self.tokens_file, "w", encoding='utf-8') as f:
             line_no = 0
 
             for token_line in self.all_tokens:
@@ -171,7 +170,7 @@ class Scanner:
                 f.write("\n")
 
     def write_symbol_table(self):
-        with open(self.symbol_table_file, "w") as f:
+        with open(self.symbol_table_file, "w", encoding='utf-8') as f:
             cnt = 0
             for k in self.symbol_table:
                 cnt += 1
@@ -189,10 +188,15 @@ class Scanner:
 
         while self.pointer < self.length:
             current_char = self.content[self.pointer]
+            debug = False
+            if current_char == '/':
+                debug = True
+
             if current_char == '\n':
                 self.line_number += 1
 
             next_state = self.dfa.next_state(current_char)
+            
             did_forward = 0
             if self.dfa.should_redo[next_state] == 0:
                 did_forward = 1
