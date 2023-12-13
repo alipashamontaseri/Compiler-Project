@@ -5,7 +5,7 @@ from tester.utils import check_symbols, extract_tokens, check_lines, check_token
 
 class Tester:
     def __init__(self, test_dir):
-        self.test_dir = test_dir
+        self.test_dir = os.path.abspath(test_dir)
         
     def test(self, phase=1, num_tests=10, passive=False, keep_output=True):
     
@@ -20,8 +20,9 @@ class Tester:
                     os.chdir(simple_path)
                 else:
                     os.chdir(os.path.join(self.test_dir, f"T{i:02}"))
-            except:
-                print("Testcase not found!")
+            except Exception as e:
+                print("Testcase not found! Error:")
+                print(e)
                 return    
             if phase == 1:
                 compiler = Compiler(tokens_file="()tokens.txt",
@@ -37,7 +38,7 @@ class Tester:
                                     compile_mode="parser",
                                     log_parser=True)
 
-                targets = ["parse_tree"]#, "syntax_errors"]
+                targets = ["parse_tree", "syntax_errors"]
             try:
                 compiler.compile()
             except Exception as e:
