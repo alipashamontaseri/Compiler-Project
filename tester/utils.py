@@ -12,6 +12,7 @@ def check_symbols(f1, f2):
             sets.append(new_set)
     return sets[0] == sets[1]
 
+
 def extract_tokens(line):
     tokens = []
     current_token = None
@@ -53,6 +54,7 @@ def extract_tokens(line):
             current_part += c
     return tokens
 
+
 def check_tokens(f1, f2):
     lines1 = []
     lines2 = []
@@ -68,6 +70,7 @@ def check_tokens(f1, f2):
         if not t1 or not t2 or t1 != t2:
             return False
     return True
+
 
 def check_lines(f1, f2):
     lines1 = []
