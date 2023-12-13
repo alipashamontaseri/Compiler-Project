@@ -1,0 +1,47 @@
+1. Program -> DeclarationList
+2. DeclarationList -> Declaration DeclarationList | EPSILON
+3. Declaration -> DeclarationInitial DeclarationPrime
+4. DeclarationInitial -> TypeSpecifier ID
+5. DeclarationPrime -> FunDeclarationPrime | VarDeclarationPrime
+6. VarDeclarationPrime -> ; | [ NUM ] ;
+7. FunDeclarationPrime -> ( Params ) CompoundStmt
+8. TypeSpecifier -> int | void
+9. Params -> int ID ParamPrime ParamList | void
+10. ParamList -> , Param ParamList | EPSILON
+11. Param -> DeclarationInitial ParamPrime
+12. ParamPrime -> [ ] | EPSILON
+13. CompoundStmt -> { DeclarationList StatementList }
+14. StatementList -> Statement StatementList | EPSILON
+15. Statement -> ExpressionStmt | CompoundStmt | SelectionStmt | IterationStmt | ReturnStmt
+16. ExpressionStmt -> Expression ; | break ; | ;
+17. SelectionStmt -> if ( Expression ) Statement else Statement
+18. IterationStmt -> while ( Expression ) Statement
+19. ReturnStmt -> return ReturnStmtPrime
+20. ReturnStmtPrime -> ; | Expression ;
+21. Expression -> SimpleExpressionZegond | ID B
+22. B -> = Expression | [ Expression ] H | SimpleExpressionPrime
+23. H -> = Expression | G D C
+24. SimpleExpressionZegond -> AdditiveExpressionZegond C
+25. SimpleExpressionPrime -> AdditiveExpressionPrime C
+26. C -> Relop AdditiveExpression | EPSILON
+27. Relop -> < | ==
+28. AdditiveExpression -> Term D
+29. AdditiveExpressionPrime -> TermPrime D
+30. AdditiveExpressionZegond -> TermZegond D
+31. D -> Addop Term D | EPSILON
+32. Addop -> + | -
+33. Term -> SignedFactor G
+34. TermPrime -> SignedFactorPrime G
+35. TermZegond -> SignedFactorZegond G
+36. G -> * SignedFactor G | EPSILON
+37. SignedFactor -> + Factor | - Factor | Factor
+38. SignedFactorPrime -> FactorPrime
+39. SignedFactorZegond -> + Factor | - Factor | FactorZegond
+40. Factor -> ( Expression ) | ID VarCallPrime | NUM
+41. VarCallPrime -> ( Args ) | VarPrime
+42. VarPrime -> [ Expression ] | EPSILON
+43. FactorPrime -> (
+44. FactorZegond -> ( Expression ) | NUM
+45. Args -> ArgList | EPSILON
+46. ArgList -> Expression ArgListPrime
+47. ArgListPrime -> , Expression ArgListPrime | EPSILON
