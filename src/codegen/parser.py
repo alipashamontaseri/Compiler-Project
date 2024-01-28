@@ -20,19 +20,30 @@ def get_correct_non_terminal_name(name):
     return correct_name
 
 class Parser:
-    def __init__(self, scanner, parse_tree_file, syntax_errors_file):
+    def __init__(self, scanner, parse_tree_file, syntax_errors_file, code_gen_file, semantic_error_file):
         self.scanner = scanner
         self.parse_tree_file = parse_tree_file
         self.syntax_errors_file = syntax_errors_file
+        self.code_gen_file = code_gen_file
+        self.semantic_error_file = semantic_error_file
 
         # self.firsts = load_set(os.path.join("llparser", "grammar", "first.set"))
         # self.follows = load_set(os.path.join("llparser", "grammar", "follow.set"))
 
         self.non_terminals = list(firsts.keys())
 
-        parse_table = defaultdict(lambda: defaultdict(lambda: []))
 
-        self.errors = []
+        parse_table = defaultdict(lambda: defaultdict(lambda: []))
+        self.code_gen_list = []
+
+        self.syntax_error = []
+        self.semantic_error = []
+
+        self.semantic_stack = []
+        self.stack_pointer_addr = 1
+        self.base_pointer_addr = 2
+        self.stack_pointer_start = 1000
+
 
         self.has_epsilon = defaultdict(lambda: False)
         self.look_ahead = None
@@ -44,7 +55,11 @@ class Parser:
                     self.has_epsilon[nt] = True
                     continue
 
-                first = rule[0]
+                idx = 0
+                while(rule[idx][0] == '#'):
+                    idx += 1
+                first = rule[idx]
+                    
                 
                 if first in terminals:
                     parse_table[nt][first] = rule
@@ -62,6 +77,11 @@ class Parser:
                     parse_table[nt][terminal] = None
 
         self.parse_table = parse_table
+    
+    def handle_action(self, action):
+        if action == 'pnext':
+
+        
 
     def get_next_token(self):
         if self.look_ahead and self.look_ahead.get_terminal() == END_TOKEN:
@@ -72,15 +92,14 @@ class Parser:
         # print("Reading input, current_terminal:", self.look_ahead)
 
     def add_node(self, name, parent):
-
         if not parent:
             node = self.root = Node(name)
         else:
             node = Node(name, parent=parent)
         return node
 
-    def add_error(self, token, kind):
-        self.errors.append((token.line_number, kind))
+    def add_syntax_error(self, token, kind):
+        self.syntax_error.append((token.line_number, kind))
 
     def start_parsing(self):
         self.get_next_token()
@@ -93,13 +112,18 @@ class Parser:
         
         while len(stack):
             if not self.look_ahead:
-                self.add_error(self.last_token, "Unexpected EOF")
+                self.add_syntax_error(self.last_token, "Unexpected EOF")
                 return
             # print("Stack:", stack)
             if not stack[-1]:
                 stack.pop(-1)
                 current_path.pop(-1)
                 continue
+            if not stack[-1][1] and stack[-1][0][0] == '#':
+                self.handle_action(stack[-1][0][1:])
+                stack.pop(-1)
+                continue 
+
             current_node = stack[-1][0]
             if current_node == self.look_ahead.get_terminal() == END_TOKEN:
                 self.add_node("$", self.root)
@@ -116,7 +140,7 @@ class Parser:
                 if current_node == END_TOKEN:
                     break
                 # to be completed - Error handling - Unexpected stack[-1][0]
-                self.add_error(self.look_ahead, f"missing {current_node}")
+                self.add_syntax_error(self.look_ahead, f"missing {current_node}")
                 stack.pop(-1)
                 continue
             
@@ -131,15 +155,15 @@ class Parser:
                     stack.pop(-1)
                 else:
                     # Missing some non-terminal
-                    self.add_error(self.look_ahead, f"missing {current_node}")
+                    self.add_syntax_error(self.look_ahead, f"missing {current_node}")
                     # self.add_node(current_node, current_path[-1])
                     stack.pop(-1)
             elif len(action) == 0:
                 if self.look_ahead.get_terminal() == END_TOKEN:
-                    self.add_error(self.last_token, "Unexpected EOF")
+                    self.add_syntax_error(self.last_token, "Unexpected EOF")
                     return
                 # error, Illegal something
-                self.add_error(self.look_ahead, f"illegal {self.look_ahead.get_terminal()}")
+                self.add_syntax_error(self.look_ahead, f"illegal {self.look_ahead.get_terminal()}")
                 self.get_next_token()
             else:
                 node_of_tree = self.add_node(get_correct_non_terminal_name(current_node),
@@ -166,7 +190,15 @@ class Parser:
                 f.write("There is no syntax error.")
             else:
                 f.write('\n'.join([f"#{line_number} : syntax error, {error}" for line_number, error in self.errors]))
-            
+
+    def write_code_gen(self):
+        with open(self.code_gen_file, 'w', encoding="utf-8") as f:
+            f.write('\n'.join([f'{line_no}\t{content}' for line_no, content in self.code_gen_list]))
+
+    def write_semantic_error(self):
+        pass
+    
     def write_logs(self):
-        self.write_parse_tree()
-        self.write_syntax_errors()
+        self.write_code_gen()
+        self.write_semantic_error()
+        
