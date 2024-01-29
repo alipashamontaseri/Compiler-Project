@@ -46,6 +46,8 @@ class Parser:
 
         self.stack_pointer_addr = 1
         self.base_pointer_addr = 2
+        self.temp_addr = 3
+        # we can use 2-9 memories as temp
         self.stack_pointer_start = 1000
         self.base_pointer_diff = 0
         self.heap_pointer_addr = 10
@@ -88,6 +90,7 @@ class Parser:
                     parse_table[nt][terminal] = None
 
         self.parse_table = parse_table
+
     
     def add_to_symbol_heap(self, varname, vartype, varsize):
         self.symbol_table_heap[varname].append([self.heap_pointer_addr, vartype, varsize])
@@ -104,12 +107,45 @@ class Parser:
     def type_action(self):
         self.semantic_stack.append('$')
         self.semantic_stack.append(self.look_ahead)
+    
+    def pfunc_action(self):
+        pass
+
+    def scope_plus_action(self):
+        self.scope_stack.append(self.base_pointer_diff)
+
+    def scope_minus_action(self):
+        self.base_pointer_diff = self.scope_stack[-1]
+        self.scope_stack.pop()
+        # we should know set SP = BP + base_pointer_diff
+        self.code_gen_list.append([len(self.code_gen_list), "ADD", 
+                                   str(self.base_pointer_addr), '#' + str(self.base_pointer_diff), str(self.stack_pointer_addr)])
+
+
+    def func_start_action(self):
+        self.base_pointer_diff = 0
+        self.scope_stack.append(self.base_pointer_diff)
+
+    def func_end_action(self):
+        self.code_gen_list.append([len(self.code_gen_list), "SUB", 
+                                   str(self.base_pointer_addr), '#2', str(self.stack_pointer_addr)])
+        self.code_gen_list.append([len(self.code_gen_list), "SUB", 
+                                   str(self.base_pointer_addr), '#1', str(self.temp_addr)])
+        self.code_gen_list.append([len(self.code_gen_list), "ASSIGN", 
+                                   '@'+str(self.temp_addr), str(self.base_pointer_addr), ''])
+        self.code_gen_list.append([len(self.code_gen_list), "JP", 
+                                   '@' + str(self.stack_pointer_addr), '', ''])
+        
+        # set SP = BP - 2
+        # BP = @(BP-1)
+
 
     def pvar_action(self):
+        # TODO: check if varname has been defined before for semantic analysis
         until_dollar = [] 
         while(self.semantic_stack[-1] != '$'):
             until_dollar.append(self.semantic_stack.pop())
-        print(until_dollar)
+        # print(until_dollar)
         self.semantic_stack.pop()
         if len(until_dollar) == 2: # simple int
             if len(self.scope_stack) == 0: # global variable
@@ -125,14 +161,25 @@ class Parser:
             raise Exception("error while defining a variable in semantic stack")
 
     def handle_actions(self, action):
-        print(action)
+        # print(action)
         if action == 'pnext':
             self.pnext_action()
-        if action == 'type':
+        elif action == 'type':
             self.type_action()
-        if action == 'pvar':
+        elif action == 'pvar':
            self.pvar_action()
-           print(self.symbol_table_heap)
+        elif action == 'pfunc':
+            self.pfunc_action()
+        elif action == 'scope_plus':
+            self.scope_plus_action()
+        elif action == 'scope_minus':
+            self.scope_minus_action()
+        elif action == 'func_start':
+            self.func_start_action()
+        elif action == 'func_end':
+            self.func_end_action()
+         
+        print(self.symbol_table_stack)
 
     def get_next_token(self):
         if self.look_ahead and self.look_ahead.get_terminal() == END_TOKEN:
@@ -225,6 +272,7 @@ class Parser:
                 for part in reversed(action):
                     stack.append((part, part in self.non_terminals))
         self.add_node("$", self.root)
+
     
     def write_parse_tree(self):
         with open(self.parse_tree_file, 'w', encoding="utf-8") as f:
