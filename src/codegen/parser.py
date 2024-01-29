@@ -101,15 +101,11 @@ class Parser:
         self.base_pointer_diff += int(varsize)
 
     def pnext_action(self):
-        # print("SANI MADAR JENDE",self.look_ahead.lexeme, self.look_ahead.line_number, self.look_ahead.token_class)
         self.semantic_stack.append(self.look_ahead)
 
     def type_action(self):
         self.semantic_stack.append('$')
         self.semantic_stack.append(self.look_ahead)
-    
-    def pfunc_action(self):
-        pass
 
     def scope_plus_action(self):
         self.scope_stack.append(self.base_pointer_diff)
@@ -117,9 +113,14 @@ class Parser:
     def scope_minus_action(self):
         self.base_pointer_diff = self.scope_stack[-1]
         self.scope_stack.pop()
+        
         # we should know set SP = BP + base_pointer_diff
         self.code_gen_list.append([len(self.code_gen_list), "ADD", 
                                    str(self.base_pointer_addr), '#' + str(self.base_pointer_diff), str(self.stack_pointer_addr)])
+        for key,val in self.symbol_table_stack.items():
+            if len(val) > 0 and val[-1][3] > len(self.scope_stack):
+                self.symbol_table_stack[key].pop()
+        
 
 
     def func_start_action(self):
@@ -168,8 +169,6 @@ class Parser:
             self.type_action()
         elif action == 'pvar':
            self.pvar_action()
-        elif action == 'pfunc':
-            self.pfunc_action()
         elif action == 'scope_plus':
             self.scope_plus_action()
         elif action == 'scope_minus':
@@ -179,7 +178,8 @@ class Parser:
         elif action == 'func_end':
             self.func_end_action()
          
-        print(self.symbol_table_stack)
+        
+        # print(self.symbol_table_stack)
 
     def get_next_token(self):
         if self.look_ahead and self.look_ahead.get_terminal() == END_TOKEN:
