@@ -47,14 +47,14 @@ class Parser:
         self.stack_pointer_addr = 1
         self.base_pointer_addr = 2
         self.temp_addr = 3
-        # we can use 2-9 memories as temp
+        # we can use 3-9 memories as temp
         self.stack_pointer_start = 1000
         self.base_pointer_diff = 0
         self.heap_pointer_addr = 10
 
         # initializing BP and SP
-        self.code_gen_list.append([0, 'ASSIGN', f'#{self.stack_pointer_start}', f'{self.stack_pointer_addr}', ''])
-        self.code_gen_list.append([1, 'ASSIGN', f'#{self.stack_pointer_start}', f'{self.base_pointer_addr}', ''])
+        self.code_gen_list.append(['ASSIGN', f'#{self.stack_pointer_start}', f'{self.stack_pointer_addr}', ''])
+        self.code_gen_list.append(['ASSIGN', f'#{self.stack_pointer_start}', f'{self.base_pointer_addr}', ''])
 
 
 
@@ -115,12 +115,13 @@ class Parser:
         self.scope_stack.pop()
         
         # we should know set SP = BP + base_pointer_diff
-        self.code_gen_list.append([len(self.code_gen_list), "ADD", 
+        self.code_gen_list.append(["ADD", 
                                    str(self.base_pointer_addr), '#' + str(self.base_pointer_diff), str(self.stack_pointer_addr)])
         for key,val in self.symbol_table_stack.items():
             if len(val) > 0 and val[-1][3] > len(self.scope_stack):
                 self.symbol_table_stack[key].pop()
         
+    # stack_pointer , base_pointer
 
 
     def func_start_action(self):
@@ -128,13 +129,13 @@ class Parser:
         self.scope_stack.append(self.base_pointer_diff)
 
     def func_end_action(self):
-        self.code_gen_list.append([len(self.code_gen_list), "SUB", 
+        self.code_gen_list.append(["SUB", 
                                    str(self.base_pointer_addr), '#2', str(self.stack_pointer_addr)])
-        self.code_gen_list.append([len(self.code_gen_list), "SUB", 
+        self.code_gen_list.append(["SUB", 
                                    str(self.base_pointer_addr), '#1', str(self.temp_addr)])
-        self.code_gen_list.append([len(self.code_gen_list), "ASSIGN", 
+        self.code_gen_list.append(["ASSIGN", 
                                    '@'+str(self.temp_addr), str(self.base_pointer_addr), ''])
-        self.code_gen_list.append([len(self.code_gen_list), "JP", 
+        self.code_gen_list.append(["JP", 
                                    '@' + str(self.stack_pointer_addr), '', ''])
         
         # set SP = BP - 2
@@ -292,7 +293,7 @@ class Parser:
 
     def write_code_gen(self):
         with open(self.code_gen_file, 'w', encoding="utf-8") as f:
-            f.write('\n'.join([f'{line_no}\t({x}, {y}, {z}, {t})' for line_no,x,y,z,t in self.code_gen_list]))
+            f.write('\n'.join([f'{line_no}\t({x}, {y}, {z}, {t})' for line_no,x,y,z,t in enumerate(self.code_gen_list)]))
 
     def write_semantic_error(self):
         pass
