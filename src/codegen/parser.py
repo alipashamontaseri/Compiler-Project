@@ -43,6 +43,8 @@ class Parser:
         self.stack_pointer_addr = 1
         self.base_pointer_addr = 2
         self.temp_addr = 3
+        for i in range(3,10):
+            self.set_zero(i, False)
         # we can use 3-9 memories as temp
         self.stack_pointer_start = 1000
         self.base_pointer_diff = 0
@@ -87,14 +89,36 @@ class Parser:
 
         self.parse_table = parse_table
 
+    def set_zero(self, loc, indirect):
+        if not indirect:
+            self.code_gen_list.append(['ASSIGN', '#0', str(loc), ''])
+        else:
+            self.code_gen_list.append(['ASSIGN', '#0', '@' + str(loc), ''])
+
+        
     
     def add_to_symbol_heap(self, varname, vartype, varsize):
         self.symbol_table_heap[varname].append([self.heap_pointer_addr, vartype, varsize])
+        # print(varsize)
+        for i in range(int(varsize)):
+            self.set_zero(self.heap_pointer_addr + i, False)
         self.heap_pointer_addr += int(varsize)
 
     def add_to_symbol_stack(self, varname, vartype, varsize):
         self.symbol_table_stack[varname].append([self.base_pointer_diff, vartype, varsize, len(self.scope_stack)])
+        self.set_zero(self.temp_addr, False)
+        # print(varsize)
+        for i in range(int(varsize)):
+            self.code_gen_list.append(['ADD', '#' + str(i + self.base_pointer_diff), str(self.base_pointer_addr), str(self.temp_addr)])
+            self.set_zero(self.temp_addr, True)
         self.base_pointer_diff += int(varsize)
+
+    def get_temp_stack(self):
+        addr = self.base_pointer_diff
+        self.code_gen_list.append(['ADD', str(self.base_pointer_addr), '#' + str(addr), str(self.temp_addr)])
+        self.set_zero(self.temp_addr, True)
+        self.base_pointer_diff += 1
+        return addr
 
     def pnext_action(self):
         self.semantic_stack.append(self.look_ahead.lexeme)
@@ -215,8 +239,7 @@ class Parser:
         # print(self.semantic_stack)
         self.construct_address(lhs[0], lhs[1], self.temp_addr)
         self.construct_address(rhs[0], rhs[1], self.temp_addr + 1)
-        newaddr = self.base_pointer_diff
-        self.base_pointer_diff += 1
+        newaddr = self.get_temp_stack()
         self.construct_address(newaddr, 'local', self.temp_addr + 2)
         if op == '+':
             self.code_gen_list.append(['ADD', '@' + str(self.temp_addr), '@' + str(self.temp_addr + 1), '@' + str(self.temp_addr + 2)])
@@ -246,8 +269,7 @@ class Parser:
 
     def pnum_action(self):
         num = self.look_ahead.lexeme
-        addr = self.base_pointer_diff
-        self.base_pointer_diff += 1
+        addr = self.get_temp_stack()
         self.construct_address(addr, 'local', self.temp_addr)
         self.code_gen_list.append(['ASSIGN', '#' + str(num), '@' + str(self.temp_addr), ''])
         self.semantic_stack.append([addr, 'local'])
@@ -259,8 +281,7 @@ class Parser:
         self.semantic_stack.pop()
         self.semantic_stack.pop()
 
-        newaddr = self.base_pointer_diff
-        self.base_pointer_diff += 1
+        newaddr = self.get_temp_stack()
 
         self.construct_address(id[0], id[1], self.temp_addr)
         self.construct_address(exp[0], exp[1], self.temp_addr + 1)
