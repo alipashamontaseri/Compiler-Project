@@ -46,7 +46,7 @@ class Parser:
         self.base_pointer_addr = self.stack_pointer_addr + self.word_size
         self.temp_addr = self.base_pointer_addr + self.word_size
         
-        for i in range(5):
+        for i in range(6):
             self.code_gen_list.append(['ASSIGN', '#0', self.temp_addr + i * self.word_size, ''])
             
         # we can use 3-9 memories as temp
@@ -120,8 +120,8 @@ class Parser:
 
     def get_temp_stack(self):
         addr = self.base_pointer_diff
-        self.code_gen_list.append(['ADD', str(self.base_pointer_addr), '#' + str(addr), str(self.temp_addr)])
-        self.set_zero(self.temp_addr, True)
+        self.code_gen_list.append(['ADD', str(self.base_pointer_addr), '#' + str(addr), str(self.temp_addr + 6 * self.word_size)])
+        self.set_zero(self.temp_addr + 5 * self.word_size, True)
         self.base_pointer_diff += 1 * self.word_size
         return addr
 
@@ -237,11 +237,11 @@ class Parser:
         op = self.semantic_stack[-2]
         rhs = self.semantic_stack[-1]
         
-        print(self.semantic_stack)
+        # print(self.semantic_stack)
         self.semantic_stack.pop()
         self.semantic_stack.pop()
         self.semantic_stack.pop()
-
+    
         self.construct_address(lhs[0], lhs[1], self.temp_addr)
         self.construct_address(rhs[0], rhs[1], self.temp_addr + 1 * self.word_size)
         newaddr = self.get_temp_stack()
@@ -334,10 +334,10 @@ class Parser:
         elif action == 'pusharg':
             self.pusharg_action()
 
-        # print(action)
-        # print(self.semantic_stack)
-
-        # print()
+        print(action)
+        print(self.semantic_stack)
+        print(self.code_gen_list)
+        print()
 
          
         
