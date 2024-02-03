@@ -190,7 +190,6 @@ class Parser:
 
     def construct_address(self, addr, which, where): # addr is its address, which is either 'local' or 'global', where is the location we want actual address in
         if which == 'global':
-            # print('kir')
             self.code_gen_list.append(['ASSIGN', '#' + str(addr), str(where), ''])
         else:
             self.code_gen_list.append(['ADD', self.base_pointer_addr, '#' + str(addr), str(where)])
@@ -204,7 +203,7 @@ class Parser:
         self.construct_address(rhs[0], rhs[1], self.temp_addr + 1)
         self.code_gen_list.append(['ASSIGN', '@' + str(self.temp_addr + 1), '@' + str(self.temp_addr), ''])
 
-    def bin_eval_action(self):
+    def bin_eval_action(self): # pasha implements
         pass
 
     def eval_action(self):
@@ -232,7 +231,7 @@ class Parser:
         self.semantic_stack.append([newaddr, 'local'])
 
 
-    def neg_action(self):
+    def neg_action(self): # pasha implements
         pass
 
     def pnum_action(self):
@@ -243,7 +242,7 @@ class Parser:
         self.code_gen_list.append(['ASSIGN', '#' + str(num), '@' + str(self.temp_addr), ''])
         self.semantic_stack.append([addr, 'local'])
 
-    def get_element_action(self):
+    def get_element_action(self): # pasha implements
         pass
     
 
