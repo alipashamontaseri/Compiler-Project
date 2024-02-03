@@ -203,8 +203,6 @@ class Parser:
         self.construct_address(rhs[0], rhs[1], self.temp_addr + 1)
         self.code_gen_list.append(['ASSIGN', '@' + str(self.temp_addr + 1), '@' + str(self.temp_addr), ''])
 
-    def bin_eval_action(self): # pasha implements
-        pass
 
     def eval_action(self):
     
@@ -228,6 +226,10 @@ class Parser:
             self.code_gen_list.append(['SUB', '@' + str(self.temp_addr), '@' + str(self.temp_addr + 1), '@' + str(self.temp_addr + 2)])
         elif op == '*':
             self.code_gen_list.append(['MULT', '@' + str(self.temp_addr), '@' + str(self.temp_addr + 1), '@' + str(self.temp_addr + 2)])
+        elif op == '<':
+            self.code_gen_list.append(['LT', '@' + str(self.temp_addr), '@' + str(self.temp_addr + 1), '@' + str(self.temp_addr + 2)])
+        elif op == '==':
+            self.code_gen_list.append(['EQ', '@' + str(self.temp_addr), '@' + str(self.temp_addr + 1), '@' + str(self.temp_addr + 2)])
         self.semantic_stack.append([newaddr, 'local'])
 
 
@@ -268,8 +270,6 @@ class Parser:
             self.pid_action()
         elif action == 'assign':
             self.assign_action()
-        elif action == 'bin_eval':
-            self.bin_eval_action()
         elif action == 'eval':
             self.eval_action()
         elif action == 'neg':
