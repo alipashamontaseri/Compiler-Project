@@ -255,9 +255,22 @@ class Parser:
     def get_element_action(self): # pasha implements
         id = self.semantic_stack[-2]
         exp = self.semantic_stack[-1]
-        self.construct_address(id[0], id[1], self.temp_addr)
+        
+        self.semantic_stack.pop()
+        self.semantic_stack.pop()
 
-        print(id, exp)
+        newaddr = self.base_pointer_diff
+        self.base_pointer_diff += 1
+
+        self.construct_address(id[0], id[1], self.temp_addr)
+        self.construct_address(exp[0], exp[1], self.temp_addr + 1)
+        self.construct_address(newaddr, 'local', self.temp_addr + 2)
+
+        self.code_gen_list.append(['ADD', '@' + str(self.temp_addr), '@' + str(self.temp_addr + 1), '@' + str(self.temp_addr + 2)])
+        
+        self.semantic_stack.append([newaddr, 'indexed'])
+    
+
 
 
     def handle_actions(self, action):

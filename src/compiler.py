@@ -35,7 +35,7 @@ class Compiler:
         codegenerator = CodeGenParser(scanner, parse_tree_file=parse_tree_file,
                                       syntax_errors_file=syntax_errors_file, 
                                       code_gen_file=code_gen_file,
-                                      semantic_error_file=semantic_error_file)
+                                      semantic_errors_file=semantic_error_file)
         self.scanner = scanner
         self.parser = parser
         self.codegenerator = codegenerator
