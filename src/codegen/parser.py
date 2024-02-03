@@ -46,13 +46,13 @@ class Parser:
         self.base_pointer_addr = self.stack_pointer_addr + self.word_size
         self.temp_addr = self.base_pointer_addr + self.word_size
         
-        for i in range(3,10):
-            self.set_zero(i, False)
+        for i in range(5):
+            self.code_gen_list.append(['ASSIGN', '#0', self.temp_addr + i * self.word_size, ''])
             
         # we can use 3-9 memories as temp
-        self.stack_pointer_start = 1000
+        self.stack_pointer_start = 1000 * self.word_size
         self.base_pointer_diff = 0
-        self.heap_pointer_addr = 10
+        self.heap_pointer_addr = 10 * self.word_size
 
         # initializing BP and SP
         self.code_gen_list.append(['ASSIGN', f'#{self.stack_pointer_start}', f'{self.stack_pointer_addr}', ''])
@@ -103,7 +103,7 @@ class Parser:
         self.symbol_table_heap[varname].append([self.heap_pointer_addr, vartype, varsize])
         # print(varsize)
         for i in range(int(varsize)):
-            self.set_zero(self.heap_pointer_addr + i, False)
+            self.set_zero(self.heap_pointer_addr + i + self.word_size, False)
         self.heap_pointer_addr += int(varsize) * self.word_size
 
     def add_to_symbol_stack(self, varname, vartype, varsize):
@@ -111,15 +111,15 @@ class Parser:
         self.set_zero(self.temp_addr, False)
         # print(varsize)
         for i in range(int(varsize)):
-            self.code_gen_list.append(['ADD', '#' + str(i + self.base_pointer_diff), str(self.base_pointer_addr), str(self.temp_addr)])
+            self.code_gen_list.append(['ADD', '#' + str(i * self.word_size + self.base_pointer_diff), str(self.base_pointer_addr), str(self.temp_addr)])
             self.set_zero(self.temp_addr, True)
-        self.base_pointer_diff += int(varsize)
+        self.base_pointer_diff += int(varsize) * self.word_size
 
     def get_temp_stack(self):
         addr = self.base_pointer_diff
         self.code_gen_list.append(['ADD', str(self.base_pointer_addr), '#' + str(addr), str(self.temp_addr)])
         self.set_zero(self.temp_addr, True)
-        self.base_pointer_diff += 1
+        self.base_pointer_diff += 1 * self.word_size
         return addr
 
     def pnext_action(self):
@@ -226,7 +226,7 @@ class Parser:
         self.semantic_stack.pop()
         self.construct_address(lhs[0], lhs[1], self.temp_addr)
         self.construct_address(rhs[0], rhs[1], self.temp_addr + 1)
-        self.code_gen_list.append(['ASSIGN', '@' + str(self.temp_addr + 1), '@' + str(self.temp_addr), ''])
+        self.code_gen_list.append(['ASSIGN', '@' + str(self.temp_addr + 1 * self.word_size), '@' + str(self.temp_addr), ''])
 
 
     def eval_action(self):
@@ -235,25 +235,25 @@ class Parser:
         op = self.semantic_stack[-2]
         rhs = self.semantic_stack[-1]
         
+        print(self.semantic_stack)
         self.semantic_stack.pop()
         self.semantic_stack.pop()
         self.semantic_stack.pop()
 
-        # print(self.semantic_stack)
         self.construct_address(lhs[0], lhs[1], self.temp_addr)
         self.construct_address(rhs[0], rhs[1], self.temp_addr + 1)
         newaddr = self.get_temp_stack()
         self.construct_address(newaddr, 'local', self.temp_addr + 2)
         if op == '+':
-            self.code_gen_list.append(['ADD', '@' + str(self.temp_addr), '@' + str(self.temp_addr + 1), '@' + str(self.temp_addr + 2)])
+            self.code_gen_list.append(['ADD', '@' + str(self.temp_addr), '@' + str(self.temp_addr + 1 * self.word_size), '@' + str(self.temp_addr + 2 * self.word_size)])
         elif op == '-':
-            self.code_gen_list.append(['SUB', '@' + str(self.temp_addr), '@' + str(self.temp_addr + 1), '@' + str(self.temp_addr + 2)])
+            self.code_gen_list.append(['SUB', '@' + str(self.temp_addr), '@' + str(self.temp_addr + 1 * self.word_size), '@' + str(self.temp_addr + 2 * self.word_size)])
         elif op == '*':
-            self.code_gen_list.append(['MULT', '@' + str(self.temp_addr), '@' + str(self.temp_addr + 1), '@' + str(self.temp_addr + 2)])
+            self.code_gen_list.append(['MULT', '@' + str(self.temp_addr), '@' + str(self.temp_addr + 1 * self.word_size), '@' + str(self.temp_addr + 2 * self.word_size)])
         elif op == '<':
-            self.code_gen_list.append(['LT', '@' + str(self.temp_addr), '@' + str(self.temp_addr + 1), '@' + str(self.temp_addr + 2)])
+            self.code_gen_list.append(['LT', '@' + str(self.temp_addr), '@' + str(self.temp_addr + 1 * self.word_size), '@' + str(self.temp_addr + 2 * self.word_size)])
         elif op == '==':
-            self.code_gen_list.append(['EQ', '@' + str(self.temp_addr), '@' + str(self.temp_addr + 1), '@' + str(self.temp_addr + 2)])
+            self.code_gen_list.append(['EQ', '@' + str(self.temp_addr), '@' + str(self.temp_addr + 1 * self.word_size), '@' + str(self.temp_addr + 2 * self.word_size)])
         self.semantic_stack.append([newaddr, 'local'])
 
     def prepare_call_action(self): # Alliance implements
@@ -287,10 +287,10 @@ class Parser:
         newaddr = self.get_temp_stack()
 
         self.construct_address(id[0], id[1], self.temp_addr)
-        self.construct_address(exp[0], exp[1], self.temp_addr + 1)
-        self.construct_address(newaddr, 'local', self.temp_addr + 2)
+        self.construct_address(exp[0], exp[1], self.temp_addr + 1 * self.word_size)
+        self.construct_address(newaddr, 'local', self.temp_addr + 2 * self.word_size)
 
-        self.code_gen_list.append(['ADD', '@' + str(self.temp_addr), '@' + str(self.temp_addr + 1), '@' + str(self.temp_addr + 2)])
+        self.code_gen_list.append(['ADD', '@' + str(self.temp_addr), '@' + str(self.temp_addr + 1 * self.word_size), '@' + str(self.temp_addr + 2 * self.word_size)])
         
         self.semantic_stack.append([newaddr, 'indexed'])
     
