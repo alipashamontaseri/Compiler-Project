@@ -31,6 +31,7 @@ class Parser:
 
         parse_table = defaultdict(lambda: defaultdict(lambda: []))
         self.code_gen_list = [] # should contain 4 address codes
+        self.word_size = 4
 
         self.syntax_error = []
         self.semantic_errors = []
@@ -38,13 +39,16 @@ class Parser:
         self.semantic_stack = []
         self.symbol_table_heap = defaultdict(lambda: []) # dict -> list[(address, type, size)]
         self.symbol_table_stack = defaultdict(lambda: []) # dict -> list[(address, type, size, scope)]
+        self.symbol_table_function = {} # dict -> (start_point, return_type, args_types)
         self.scope_stack = []
 
-        self.stack_pointer_addr = 1
-        self.base_pointer_addr = 2
-        self.temp_addr = 3
+        self.stack_pointer_addr = 0
+        self.base_pointer_addr = self.stack_pointer_addr + self.word_size
+        self.temp_addr = self.base_pointer_addr + self.word_size
+        
         for i in range(3,10):
             self.set_zero(i, False)
+            
         # we can use 3-9 memories as temp
         self.stack_pointer_start = 1000
         self.base_pointer_diff = 0
@@ -54,7 +58,7 @@ class Parser:
         self.code_gen_list.append(['ASSIGN', f'#{self.stack_pointer_start}', f'{self.stack_pointer_addr}', ''])
         self.code_gen_list.append(['ASSIGN', f'#{self.stack_pointer_start}', f'{self.base_pointer_addr}', ''])
 
-
+        # parsing stuff
 
         self.has_epsilon = defaultdict(lambda: False)
         self.look_ahead = None
@@ -95,14 +99,12 @@ class Parser:
         else:
             self.code_gen_list.append(['ASSIGN', '#0', '@' + str(loc), ''])
 
-        
-    
     def add_to_symbol_heap(self, varname, vartype, varsize):
         self.symbol_table_heap[varname].append([self.heap_pointer_addr, vartype, varsize])
         # print(varsize)
         for i in range(int(varsize)):
             self.set_zero(self.heap_pointer_addr + i, False)
-        self.heap_pointer_addr += int(varsize)
+        self.heap_pointer_addr += int(varsize) * self.word_size
 
     def add_to_symbol_stack(self, varname, vartype, varsize):
         self.symbol_table_stack[varname].append([self.base_pointer_diff, vartype, varsize, len(self.scope_stack)])
@@ -218,6 +220,7 @@ class Parser:
     def assign_action(self):
         lhs = self.semantic_stack[-2]
         rhs = self.semantic_stack[-1]
+        
         # print(lhs, rhs)
         self.semantic_stack.pop()
         self.semantic_stack.pop()
