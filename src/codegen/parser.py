@@ -103,7 +103,7 @@ class Parser:
         self.symbol_table_heap[varname].append([self.heap_pointer_addr, vartype, varsize])
         # print(varsize)
         for i in range(int(varsize)):
-            self.set_zero(self.heap_pointer_addr + i + self.word_size, False)
+            self.set_zero(self.heap_pointer_addr + i * self.word_size, False)
         self.heap_pointer_addr += int(varsize) * self.word_size
 
     def add_to_symbol_stack(self, varname, vartype, varsize):
@@ -225,7 +225,7 @@ class Parser:
         self.semantic_stack.pop()
         self.semantic_stack.pop()
         self.construct_address(lhs[0], lhs[1], self.temp_addr)
-        self.construct_address(rhs[0], rhs[1], self.temp_addr + 1)
+        self.construct_address(rhs[0], rhs[1], self.temp_addr + 1 * self.word_size)
         self.code_gen_list.append(['ASSIGN', '@' + str(self.temp_addr + 1 * self.word_size), '@' + str(self.temp_addr), ''])
 
 
@@ -241,9 +241,9 @@ class Parser:
         self.semantic_stack.pop()
 
         self.construct_address(lhs[0], lhs[1], self.temp_addr)
-        self.construct_address(rhs[0], rhs[1], self.temp_addr + 1)
+        self.construct_address(rhs[0], rhs[1], self.temp_addr + 1 * self.word_size)
         newaddr = self.get_temp_stack()
-        self.construct_address(newaddr, 'local', self.temp_addr + 2)
+        self.construct_address(newaddr, 'local', self.temp_addr + 2 * self.word_size)
         if op == '+':
             self.code_gen_list.append(['ADD', '@' + str(self.temp_addr), '@' + str(self.temp_addr + 1 * self.word_size), '@' + str(self.temp_addr + 2 * self.word_size)])
         elif op == '-':
