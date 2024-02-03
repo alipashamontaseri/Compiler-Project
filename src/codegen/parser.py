@@ -20,24 +20,20 @@ def get_correct_non_terminal_name(name):
     return correct_name
 
 class Parser:
-    def __init__(self, scanner, parse_tree_file, syntax_errors_file, code_gen_file, semantic_error_file):
+    def __init__(self, scanner, parse_tree_file, syntax_errors_file, code_gen_file, semantic_errors_file):
         self.scanner = scanner
         self.parse_tree_file = parse_tree_file
         self.syntax_errors_file = syntax_errors_file
         self.code_gen_file = code_gen_file
-        self.semantic_error_file = semantic_error_file
-
-        # self.firsts = load_set(os.path.join("llparser", "grammar", "first.set"))
-        # self.follows = load_set(os.path.join("llparser", "grammar", "follow.set"))
+        self.semantic_errors_file = semantic_errors_file
 
         self.non_terminals = list(firsts.keys())
-
 
         parse_table = defaultdict(lambda: defaultdict(lambda: []))
         self.code_gen_list = [] # should contain 4 address codes
 
         self.syntax_error = []
-        self.semantic_error = []
+        self.semantic_errors = []
 
         self.semantic_stack = []
         self.symbol_table_heap = defaultdict(lambda: []) # dict -> list[(address, type, size)]
@@ -232,6 +228,14 @@ class Parser:
             self.code_gen_list.append(['EQ', '@' + str(self.temp_addr), '@' + str(self.temp_addr + 1), '@' + str(self.temp_addr + 2)])
         self.semantic_stack.append([newaddr, 'local'])
 
+    def prepare_call_action(self): # Alliance implements
+        pass
+    
+    def jump_action(self): # Alliance implements
+        pass
+    
+    def pusharg_action(self): # Alliance implements
+        pass
 
     def neg_action(self): # pasha implements
         pass
@@ -246,9 +250,6 @@ class Parser:
 
     def get_element_action(self): # pasha implements
         pass
-    
-
-
 
     def handle_actions(self, action):
         # print(action)
@@ -278,7 +279,12 @@ class Parser:
             self.pnum_action()
         elif action == 'get_element':
             self.get_element_action()
-
+        elif action == 'prepare_call':
+            self.prepare_call_action()
+        elif action == 'jump':
+            self.jump_action()
+        elif action == 'pusharg':
+            self.pusharg_action()
 
         print(action)
         print(self.semantic_stack)
@@ -320,7 +326,7 @@ class Parser:
             if not self.look_ahead:
                 self.add_syntax_error(self.last_token, "Unexpected EOF")
                 return
-            # print("Stack:", stack)
+            
             if not stack[-1]:
                 stack.pop(-1)
                 current_path.pop(-1)
@@ -402,10 +408,10 @@ class Parser:
         with open(self.code_gen_file, 'w', encoding="utf-8") as f:
             f.write('\n'.join([f'{line_no}\t({x[0]}, {x[1]}, {x[2]}, {x[3]})' for line_no,x in enumerate(self.code_gen_list)]))
 
-    def write_semantic_error(self):
+    def write_semantic_errors(self):
         pass
     
     def write_logs(self):
         self.write_code_gen()
-        self.write_semantic_error()
+        self.write_semantic_errors()
         
