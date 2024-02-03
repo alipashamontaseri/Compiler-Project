@@ -187,8 +187,10 @@ class Parser:
     def construct_address(self, addr, which, where): # addr is its address, which is either 'local' or 'global', where is the location we want actual address in
         if which == 'global':
             self.code_gen_list.append(['ASSIGN', '#' + str(addr), str(where), ''])
-        else:
+        elif which == 'local':
             self.code_gen_list.append(['ADD', self.base_pointer_addr, '#' + str(addr), str(where)])
+        elif which == 'indexed':
+            self.code_gen_list.append(['ADD', self.base_pointer_addr, str(addr), str(where)])
     def assign_action(self):
         lhs = self.semantic_stack[-2]
         rhs = self.semantic_stack[-1]
@@ -238,7 +240,9 @@ class Parser:
         pass
 
     def neg_action(self): # pasha implements
-        pass
+        tp = self.semantic_stack[-1]
+        self.construct_address(tp[0], tp[1], self.temp_addr)
+        self.code_gen_list.append(['SUB', '#0', '@' + str(self.temp_addr), '@' + str(self.temp_addr)])
 
     def pnum_action(self):
         num = self.look_ahead.lexeme
@@ -249,7 +253,15 @@ class Parser:
         self.semantic_stack.append([addr, 'local'])
 
     def get_element_action(self): # pasha implements
-        pass
+        id = self.semantic_stack[-2]
+        exp = self.semantic_stack[-1]
+        self.construct_address(id[0], id[1], self.temp_addr)
+
+        print(id, exp)
+
+    
+
+
 
     def handle_actions(self, action):
         # print(action)
@@ -286,10 +298,10 @@ class Parser:
         elif action == 'pusharg':
             self.pusharg_action()
 
-        print(action)
-        print(self.semantic_stack)
+        # print(action)
+        # print(self.semantic_stack)
 
-        print()
+        # print()
 
          
         
