@@ -115,6 +115,9 @@ class Parser:
             self.set_zero(self.temp_addr, True)
         self.base_pointer_diff += int(varsize)
 
+    def add_to_symbol_table_function(self, function_name, start_point, return_type, args_type): # Alliiance
+        pass
+
     def get_temp_stack(self):
         addr = self.base_pointer_diff
         self.code_gen_list.append(['ADD', str(self.base_pointer_addr), '#' + str(addr), str(self.temp_addr)])
@@ -144,7 +147,6 @@ class Parser:
                 self.symbol_table_stack[key].pop()
         
     # stack_pointer , base_pointer
-
 
     def func_start_action(self):
         self.base_pointer_diff = 0
