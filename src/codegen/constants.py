@@ -41,11 +41,11 @@ rules = {"Program": [["DeclarationList"]],
         "SignedFactorPrime": [["FactorPrime"]], 
         "SignedFactorZegond": [["+", "Factor"], ["-", "Factor", "#neg"], ["FactorZegond"]], 
         "Factor": [["(", "Expression", ")"], ["#pid", "ID", "VarCallPrime"], ["#pnum", "NUM"]], 
-        "VarCallPrime": [["(", "Args", ")"], ["VarPrime"]], 
+        "VarCallPrime": [["#prepare_call", "(", "Args", ")", "#jump"], ["VarPrime"]], 
         "VarPrime": [["[", "Expression", "]"], []], 
-        "FactorPrime": [["(", "Args", ")"], []], 
+        "FactorPrime": [["#prepare_call", "(", "Args", ")", "#jump"], []], 
         "FactorZegond": [["(", "Expression", ")"], ["#pnum", "NUM"]], 
         "Args": [["ArgList"], []], 
-        "ArgList": [["Expression", "ArgListPrime"]], 
-        "ArgListPrime": [[",", "Expression", "ArgListPrime"], []]
+        "ArgList": [["Expression", "#pusharg", "ArgListPrime"]], 
+        "ArgListPrime": [[",", "Expression", "#pusharg", "ArgListPrime"], []]
 }
