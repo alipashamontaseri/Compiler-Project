@@ -101,11 +101,11 @@ class Parser:
         self.base_pointer_diff += int(varsize)
 
     def pnext_action(self):
-        self.semantic_stack.append(self.look_ahead)
+        self.semantic_stack.append(self.look_ahead.lexeme)
 
     def type_action(self):
         self.semantic_stack.append('$')
-        self.semantic_stack.append(self.look_ahead)
+        self.semantic_stack.append(self.look_ahead.lexeme)
 
     def scope_plus_action(self):
         self.scope_stack.append(self.base_pointer_diff)
@@ -137,9 +137,14 @@ class Parser:
                                    '@'+str(self.temp_addr), str(self.base_pointer_addr), ''])
         self.code_gen_list.append(["JP", 
                                    '@' + str(self.stack_pointer_addr), '', ''])
-        
+        # withour ret
         # set SP = BP - 2
         # BP = @(BP-1)
+
+        # with ret
+        # set SP = BP - 1
+        # BP = @(BP-1)
+        # set return->SP-1
 
 
     def pvar_action(self):
@@ -151,16 +156,98 @@ class Parser:
         self.semantic_stack.pop()
         if len(until_dollar) == 2: # simple int
             if len(self.scope_stack) == 0: # global variable
-                self.add_to_symbol_heap(until_dollar[0].lexeme, 'int', 1)
+                self.add_to_symbol_heap(until_dollar[0], 'int', 1)
             else: # local variable
-                self.add_to_symbol_stack(until_dollar[0].lexeme, 'int', 1)
+                self.add_to_symbol_stack(until_dollar[0], 'int', 1)
         elif len(until_dollar) == 3: # array
             if len(self.scope_stack) == 0: # global variable
-                self.add_to_symbol_heap(until_dollar[1].lexeme, 'array', until_dollar[0].lexeme)
+                self.add_to_symbol_heap(until_dollar[1], 'array', until_dollar[0])
             else: # local variable
-                self.add_to_symbol_stack(until_dollar[1].lexeme, 'array', until_dollar[0].lexeme)
+                self.add_to_symbol_stack(until_dollar[1], 'array', until_dollar[0])
         else:
             raise Exception("error while defining a variable in semantic stack")
+
+    def pid_action(self):
+        id = self.look_ahead.lexeme
+        if self.symbol_table_stack[id] != []:
+            elem = self.symbol_table_stack[id][-1]
+            elem_loc = elem[0]
+            elem_type = elem[1]
+            elem_size = elem[2]
+            elem_score = elem[3]
+            # actual address is BP + elem_loc
+            self.semantic_stack.append([elem_loc, 'local'])
+        elif self.symbol_table_heap[id] != []:
+            elem = self.symbol_table_heap[id][-1]
+            elem_loc = elem[0]
+            # actual address is elem_loc
+            self.semantic_stack.append([elem_loc, 'global'])
+            # print(self.semantic_stack)
+        else:
+            # now we should handle function
+            print(id, 'not defined or is a func') # handle later for semantic analysis
+
+
+    def construct_address(self, addr, which, where): # addr is its address, which is either 'local' or 'global', where is the location we want actual address in
+        if which == 'global':
+            # print('kir')
+            self.code_gen_list.append(['ASSIGN', '#' + str(addr), str(where), ''])
+        else:
+            self.code_gen_list.append(['ADD', self.base_pointer_addr, '#' + str(addr), str(where)])
+    def assign_action(self):
+        lhs = self.semantic_stack[-2]
+        rhs = self.semantic_stack[-1]
+        # print(lhs, rhs)
+        self.semantic_stack.pop()
+        self.semantic_stack.pop()
+        self.construct_address(lhs[0], lhs[1], self.temp_addr)
+        self.construct_address(rhs[0], rhs[1], self.temp_addr + 1)
+        self.code_gen_list.append(['ASSIGN', '@' + str(self.temp_addr + 1), '@' + str(self.temp_addr), ''])
+
+    def bin_eval_action(self):
+        pass
+
+    def eval_action(self):
+    
+        lhs = self.semantic_stack[-3]
+        op = self.semantic_stack[-2]
+        rhs = self.semantic_stack[-1]
+        
+        self.semantic_stack.pop()
+        self.semantic_stack.pop()
+        self.semantic_stack.pop()
+
+        # print(self.semantic_stack)
+        self.construct_address(lhs[0], lhs[1], self.temp_addr)
+        self.construct_address(rhs[0], rhs[1], self.temp_addr + 1)
+        newaddr = self.base_pointer_diff
+        self.base_pointer_diff += 1
+        self.construct_address(newaddr, 'local', self.temp_addr + 2)
+        if op == '+':
+            self.code_gen_list.append(['ADD', '@' + str(self.temp_addr), '@' + str(self.temp_addr + 1), '@' + str(self.temp_addr + 2)])
+        elif op == '-':
+            self.code_gen_list.append(['SUB', '@' + str(self.temp_addr), '@' + str(self.temp_addr + 1), '@' + str(self.temp_addr + 2)])
+        elif op == '*':
+            self.code_gen_list.append(['MULT', '@' + str(self.temp_addr), '@' + str(self.temp_addr + 1), '@' + str(self.temp_addr + 2)])
+        self.semantic_stack.append([newaddr, 'local'])
+
+
+    def neg_action(self):
+        pass
+
+    def pnum_action(self):
+        num = self.look_ahead.lexeme
+        addr = self.base_pointer_diff
+        self.base_pointer_diff += 1
+        self.construct_address(addr, 'local', self.temp_addr)
+        self.code_gen_list.append(['ASSIGN', '#' + str(num), '@' + str(self.temp_addr), ''])
+        self.semantic_stack.append([addr, 'local'])
+
+    def get_element_action(self):
+        pass
+    
+
+
 
     def handle_actions(self, action):
         # print(action)
@@ -178,6 +265,27 @@ class Parser:
             self.func_start_action()
         elif action == 'func_end':
             self.func_end_action()
+        elif action == 'pid':
+            self.pid_action()
+        elif action == 'assign':
+            self.assign_action()
+        elif action == 'bin_eval':
+            self.bin_eval_action()
+        elif action == 'eval':
+            self.eval_action()
+        elif action == 'neg':
+            self.neg_action()
+        elif action == 'pnum':
+            self.pnum_action()
+        elif action == 'get_element':
+            self.get_element_action()
+
+
+        print(action)
+        print(self.semantic_stack)
+
+        print()
+
          
         
         # print(self.symbol_table_stack)
@@ -293,7 +401,7 @@ class Parser:
 
     def write_code_gen(self):
         with open(self.code_gen_file, 'w', encoding="utf-8") as f:
-            f.write('\n'.join([f'{line_no}\t({x}, {y}, {z}, {t})' for line_no,x,y,z,t in enumerate(self.code_gen_list)]))
+            f.write('\n'.join([f'{line_no}\t({x[0]}, {x[1]}, {x[2]}, {x[3]})' for line_no,x in enumerate(self.code_gen_list)]))
 
     def write_semantic_error(self):
         pass
