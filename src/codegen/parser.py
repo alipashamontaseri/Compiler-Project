@@ -37,6 +37,7 @@ class Parser:
         self.semantic_errors = []
 
         self.semantic_stack = []
+        self.break_stack = []
         self.symbol_table_heap = defaultdict(lambda: []) # dict -> list[(address, type, size)]
         self.symbol_table_stack = defaultdict(lambda: []) # dict -> list[(address, type, size, scope)]
         self.symbol_table_function = {} # dict -> (start_point, return_type, args_types)
@@ -322,6 +323,10 @@ class Parser:
 
         print('kir',jpf)
 
+        while len(self.break_stack) > 0 and self.break_stack[-1][0] > len(self.scope_stack):
+            self.code_gen_list[self.break_stack[-1][1]][1] = str(len(self.code_gen_list))
+            self.break_stack.pop()
+
         self.code_gen_list[int(jpf)][2] = str(len(self.code_gen_list))
 
 
@@ -333,6 +338,10 @@ class Parser:
         self.semantic_stack.append(len(self.code_gen_list))
 
         self.code_gen_list.append(["JPF", '@' + str(self.temp_addr), '?', ''])
+
+    def break_action(self):
+        self.break_stack.append([len(self.scope_stack), len(self.code_gen_list)])
+        self.code_gen_list.append(["JP", '?', '', ''])
 
 
 
@@ -379,6 +388,8 @@ class Parser:
             self.while_end_action()
         elif action == 'check_condition_while':
             self.check_condition_while_action()
+        elif action == 'break':
+            self.break_action()
         
 
         print(action)
