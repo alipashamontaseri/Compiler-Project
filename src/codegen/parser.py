@@ -103,9 +103,8 @@ class Parser:
         self.code_gen_list.append(["JP", "?", "", ""])
 
     def add_semantic_error(self, error):
-        # print(self.prev_token, self.prev_token.line_number)
-        # print(self.last_token, self.last_token.line_number)
-        self.semantic_errors.append((self.prev_token.line_number, error))
+        self.semantic_errors.append((max(self.current_line, self.prev_token.line_number), error))
+        # print(error)
 
     def set_zero(self, loc, indirect):
         if not indirect:
@@ -137,10 +136,12 @@ class Parser:
 
     def pnext_action(self):
         self.semantic_stack.append(self.look_ahead.lexeme)
+        self.current_line = self.look_ahead.line_number
 
     def type_action(self):
         self.semantic_stack.append('$')
         self.semantic_stack.append(self.look_ahead.lexeme)
+        self.current_line = self.look_ahead.line_number
 
     def scope_plus_action(self):
         self.scope_stack.append(self.base_pointer_diff)
@@ -217,6 +218,7 @@ class Parser:
 
     def pid_action(self):
         id = self.look_ahead.lexeme
+        self.current_line = self.look_ahead.line_number
 
         if self.symbol_table_stack[id] != []:
             # local variable
@@ -422,7 +424,8 @@ class Parser:
         # Semantic Analysis: Actual and formal parameters number matching
         if len(params) != len(self.symbol_table_function[function_name]['params']):
             self.add_semantic_error(f"Mismatch in numbers of arguments of '{function_name}'")
-            self.semantic_stack.append(None)
+            # just return something
+            self.semantic_stack.append([0, 'local'])
             return
         
         params_signature = self.symbol_table_function[function_name]['params']
@@ -437,7 +440,8 @@ class Parser:
                 if params_signature[i][1]:
                     # print(params_signature)
                     self.add_semantic_error(f"Mismatch in type of argument {i+1} for '{function_name}'. Expected int but got array instead")
-                    self.semantic_stack.append(None)
+                    # just return something
+                    self.semantic_stack.append([0, 'local'])
                     # print('hey now1')
                     return
                 temp = self.get_temp_stack()
@@ -447,7 +451,8 @@ class Parser:
             elif len(param) == 3:
                 if not params_signature[i][1]:
                     self.add_semantic_error(f"Mismatch in type of argument {i+1} for '{function_name}'. Expected array but got int instead")
-                    self.semantic_stack.append(None)
+                    # just return something
+                    self.semantic_stack.append([0, 'local'])
                     # print('hey now2')
                     return
                 temp = self.get_temp_stack()
@@ -484,6 +489,7 @@ class Parser:
 
     def pnum_action(self):
         num = self.look_ahead.lexeme
+        self.current_line = self.look_ahead.line_number
         addr = self.get_temp_stack()
         self.construct_address(addr, 'local', self.temp_addr)
         self.code_gen_list.append(['ASSIGN', '#' + str(num), '@' + str(self.temp_addr), ''])
