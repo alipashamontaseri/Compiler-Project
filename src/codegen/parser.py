@@ -370,7 +370,7 @@ class Parser:
                 temp = self.get_temp_stack()
                 self.construct_address(loc, which, self.temp_addr)
                 self.construct_address(temp, 'local', self.temp_addr + self.word_size)
-                self.code_gen_list(["ASSIGN", f"@{self.temp_addr}", f"@{self.temp_addr + self.word_size}", ''])
+                self.code_gen_list.append(["ASSIGN", f"@{self.temp_addr}", f"@{self.temp_addr + self.word_size}", ''])
             elif len(params) == 3:
                 # TODO array
                 pass
