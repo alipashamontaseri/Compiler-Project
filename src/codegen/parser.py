@@ -587,9 +587,8 @@ class Parser:
         
         print(action)
         print(self.semantic_stack)
-        # # print(self.code_gen_list)
         print(len(self.code_gen_list))
-        print(self.code_gen_list[-1])
+        print(self.code_gen_list)
         print()
 
         # print(self.symbol_table_stack)
@@ -704,7 +703,7 @@ class Parser:
                 f.write('\n'.join([f"#{line_number} : syntax error, {error}" for line_number, error in self.errors]))
 
     def write_code_gen(self):
-        self.code_gen_list = self.code_gen_list[:-4]
+        self.code_gen_list = self.code_gen_list[:-5]
         self.code_gen_list.append(['ASSIGN', '#0' ,'0', ''])
         with open(self.code_gen_file, 'w', encoding="utf-8") as f:
             f.write('\n'.join([f'{line_no}\t({x[0]}, {x[1]}, {x[2]}, {x[3]})' for line_no,x in enumerate(self.code_gen_list)]))
