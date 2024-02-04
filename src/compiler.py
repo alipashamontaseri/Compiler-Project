@@ -7,6 +7,8 @@ current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 
+DEBUG = True
+
 class Compiler:
     def __init__(self, inputfile="input.txt", compile_mode="full",
     log_scanner=False,
@@ -17,7 +19,7 @@ class Compiler:
     symbol_table_file="symbol_table.txt",
     parse_tree_file="parse_tree.txt",
     syntax_errors_file="syntax_errors.txt",
-    code_gen_file=os.path.join('..', 'test_data', 'Phase3_Interpreter', "output.txt"),
+    code_gen_file=os.path.join('..', 'test_data', 'Phase3_Interpreter', "output.txt") if DEBUG else "output.txt",
     semantic_error_file="semantic_errors.txt"
     ):
 

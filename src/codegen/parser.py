@@ -111,13 +111,14 @@ class Parser:
             self.set_zero(self.heap_pointer_addr + i * self.word_size, False)
         self.heap_pointer_addr += int(varsize) * self.word_size
 
-    def add_to_symbol_stack(self, varname, vartype, varsize):
+    def add_to_symbol_stack(self, varname, vartype, varsize, set_zero=True):
         self.symbol_table_stack[varname].append([self.base_pointer_diff, vartype, varsize, len(self.scope_stack)])
         self.set_zero(self.temp_addr, False)
         # print(varsize)
-        for i in range(int(varsize)):
-            self.code_gen_list.append(['ADD', '#' + str(i * self.word_size + self.base_pointer_diff), str(self.base_pointer_addr), str(self.temp_addr)])
-            self.set_zero(self.temp_addr, True)
+        if set_zero:
+            for i in range(int(varsize)):
+                self.code_gen_list.append(['ADD', '#' + str(i * self.word_size + self.base_pointer_diff), str(self.base_pointer_addr), str(self.temp_addr)])
+                self.set_zero(self.temp_addr, True)
         self.base_pointer_diff += int(varsize) * self.word_size
 
     def get_temp_stack(self):
@@ -289,7 +290,7 @@ class Parser:
             pass
         
         for name, isarray in params:
-            self.add_to_symbol_stack(name, 'array_func' if isarray else 'int', 1)
+            self.add_to_symbol_stack(name, 'array_func' if isarray else 'int', 1, set_zero=False)
         
         if function_name == 'main':
             self.code_gen_list[self.jump_main_line][1] = str(start_point)
