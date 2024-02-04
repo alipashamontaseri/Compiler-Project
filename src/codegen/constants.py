@@ -18,7 +18,7 @@ rules = {"Program": [["DeclarationList"]],
         "Statement": [["ExpressionStmt"], ["CompoundStmt"], ["SelectionStmt"], ["IterationStmt"], ["ReturnStmt"]], 
         "ExpressionStmt": [["Expression", ";" , "#pop"], ["break", ";"], [";"]], 
         "SelectionStmt": [["if", "(", "Expression", ")", "Statement", "else", "Statement"]], 
-        "IterationStmt": [["#scope_plus", "while", "(", "Expression", ")", "Statement", "#scope_minus"]], 
+        "IterationStmt": [["#while_start", "while", "(", "Expression", ")", "#check_condition_while", "#scope_plus", "Statement", "#scope_minus", "#while_end"]], 
         "ReturnStmt": [["return", "ReturnStmtPrime"]], 
         "ReturnStmtPrime": [[";"], ["Expression", ";"]], 
         "Expression": [["SimpleExpressionZegond"], ["#pid", "ID", "B"]], # started putting actions here (function call stuff no added yet)

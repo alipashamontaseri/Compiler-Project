@@ -306,6 +306,37 @@ class Parser:
     def pop_action(self):
         self.semantic_stack.pop()
 
+
+    def while_start_action(self):
+        self.semantic_stack.append(len(self.code_gen_list))
+
+    def while_end_action(self):
+        
+        jpf = self.semantic_stack[-1]
+        jp = self.semantic_stack[-2]
+
+        self.semantic_stack.pop()
+        self.semantic_stack.pop()
+
+        self.code_gen_list.append(['JP', str(jp), '', ''])
+
+        print('kir',jpf)
+
+        self.code_gen_list[int(jpf)][2] = str(len(self.code_gen_list))
+
+
+    def check_condition_while_action(self):
+        addr = self.semantic_stack[-1]
+        self.semantic_stack.pop()
+
+        self.construct_address(addr[0], addr[1], self.temp_addr)
+        self.semantic_stack.append(len(self.code_gen_list))
+
+        self.code_gen_list.append(["JPF", '@' + str(self.temp_addr), '?', ''])
+
+
+
+
     def handle_actions(self, action):
         print(action)
         if action == 'pnext':
@@ -342,6 +373,13 @@ class Parser:
             self.pusharg_action()
         elif action == 'pop':
             self.pop_action()
+        elif action == 'while_start':
+            self.while_start_action()
+        elif action == 'while_end':
+            self.while_end_action()
+        elif action == 'check_condition_while':
+            self.check_condition_while_action()
+        
 
         print(action)
         print(self.semantic_stack)
@@ -465,6 +503,7 @@ class Parser:
 
     def write_code_gen(self):
         self.code_gen_list = self.code_gen_list[:-4]
+        self.code_gen_list.append(['ASSIGN', '#0' ,'0', ''])
         with open(self.code_gen_file, 'w', encoding="utf-8") as f:
             f.write('\n'.join([f'{line_no}\t({x[0]}, {x[1]}, {x[2]}, {x[3]})' for line_no,x in enumerate(self.code_gen_list)]))
 
