@@ -152,6 +152,10 @@ class Parser:
 
 
     def func_end_action(self):
+        # executes when no return statement is faced
+        # withour ret
+        # set SP = BP - 2
+        # BP = @(BP-1)
         self.code_gen_list.append(["SUB", 
                                    str(self.base_pointer_addr), '#2', str(self.stack_pointer_addr)])
         self.code_gen_list.append(["SUB", 
@@ -161,9 +165,6 @@ class Parser:
         self.code_gen_list.append(["JP", 
                                    '@' + str(self.stack_pointer_addr), '', ''])
         
-        # withour ret
-        # set SP = BP - 2
-        # BP = @(BP-1)
 
         # with ret
         # set SP = BP - 1
@@ -478,6 +479,9 @@ class Parser:
         self.semantic_stack.pop()
         self.code_gen_list[int(line_addr)][1] = len(self.code_gen_list)
 
+    def return_value_action(self):
+        pass
+
     def handle_actions(self, action):
         # print(action)
         if action == 'pnext':
@@ -534,6 +538,8 @@ class Parser:
             self.addparam_action()
         elif action == 'parray':
             self.parray_action()
+        elif action == 'return_value':
+            self.return_value_action()
         else:
             raise Exception('action not defined')
         

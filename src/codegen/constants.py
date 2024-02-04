@@ -7,7 +7,7 @@ rules = {"Program": [["DeclarationList"]],
         "DeclarationInitial": [["TypeSpecifier", "#pnext", "ID"]], 
         "DeclarationPrime": [["FunDeclarationPrime"], ["VarDeclarationPrime", "#pvar"]], 
         "VarDeclarationPrime": [[";"], ["[", "#pnext", "NUM", "]", ";"]],
-        "FunDeclarationPrime": [["#func_start", "(", "Params", ")", "#add_func_sign" , "CompoundStmt", "#func_end"]],  # added actions until here
+        "FunDeclarationPrime": [["#scope_plus", "#func_start", "(", "Params", ")", "#add_func_sign" , "CompoundStmt", "#func_end", "#scope_minus"]],  # added actions until here
         "TypeSpecifier": [["#type", "int"], ["#type", "void"]], 
         "Params": [["int", "#pnext", "ID", "ParamPrime", "#addparam", "ParamList"], ["void"]], 
         "ParamList": [[",", "Param", "ParamList"], []], 
@@ -20,7 +20,7 @@ rules = {"Program": [["DeclarationList"]],
         "SelectionStmt": [["if", "(", "Expression", ")", "#scope_plus", "#start_if", "Statement", "#scope_minus", "else", "#scope_plus", "#start_else", "Statement", "#scope_minus", "#end_else"]], 
         "IterationStmt": [["#while_start", "while", "(", "Expression", ")", "#check_condition_while", "#scope_plus", "Statement", "#scope_minus", "#while_end"]], 
         "ReturnStmt": [["return", "ReturnStmtPrime"]], 
-        "ReturnStmtPrime": [[";"], ["Expression", ";"]], 
+        "ReturnStmtPrime": [["#func_end", ";"], ["Expression", "#return_value", ";"]], 
         "Expression": [["SimpleExpressionZegond"], ["#pid", "ID", "B"]], # started putting actions here (function call stuff no added yet)
         "B": [["=", "Expression", "#assign"], ["[", "Expression", "]", "#get_element", "H"], ["SimpleExpressionPrime"]], 
         "H": [["=", "Expression", "#assign"], ["G", "D", "C"]], 
