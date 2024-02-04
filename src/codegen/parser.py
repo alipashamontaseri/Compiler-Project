@@ -40,7 +40,7 @@ class Parser:
         self.break_stack = []
         self.symbol_table_heap = defaultdict(lambda: []) # dict -> list[(address, type, size)]
         self.symbol_table_stack = defaultdict(lambda: []) # dict -> list[(address, type, size, scope)]
-        self.symbol_table_function = {} # dict -> (start_point, return_type, args_types)
+        self.symbol_table_function = defaultdict(lambda: {}) # dict -> each element has following keys: params->[(name, isarray), ...], start_point->PC to where function begins, return_type 
         self.scope_stack = []
 
         self.stack_pointer_addr = 0
@@ -115,9 +115,6 @@ class Parser:
             self.code_gen_list.append(['ADD', '#' + str(i * self.word_size + self.base_pointer_diff), str(self.base_pointer_addr), str(self.temp_addr)])
             self.set_zero(self.temp_addr, True)
         self.base_pointer_diff += int(varsize) * self.word_size
-
-    def add_to_symbol_table_function(self, function_name, start_point, return_type, args_type): # Alliiance
-        pass
 
     def get_temp_stack(self):
         addr = self.base_pointer_diff
@@ -209,7 +206,7 @@ class Parser:
             self.semantic_stack.append([elem_loc, 'global'])
             # print(self.semantic_stack)
         else:
-            # now we should handle function
+            # now we should handle function #Alliance
             print(id, 'not defined or is a func') # handle later for semantic analysis
 
 
@@ -221,6 +218,7 @@ class Parser:
         elif which == 'indexed':
             self.code_gen_list.append(['ADD', self.base_pointer_addr, '#' + str(addr), str(where)])
             self.code_gen_list.append(['ASSIGN', '@' + str(where), str(where), ''])
+            
     def assign_action(self):
         lhs = self.semantic_stack[-2]
         rhs = self.semantic_stack[-1]
@@ -260,6 +258,15 @@ class Parser:
         elif op == '==':
             self.code_gen_list.append(['EQ', '@' + str(self.temp_addr), '@' + str(self.temp_addr + 1 * self.word_size), '@' + str(self.temp_addr + 2 * self.word_size)])
         self.semantic_stack.append([newaddr, 'local'])
+    
+    def add_to_symbol_table_function(self, function_name, start_point, return_type, args_type): # Alliance
+        pass
+
+    def add_func_sign_action(self): #Alliance
+        pass
+    
+    def addparam_action(self): #Alliance
+        pass
 
     def prepare_call_action(self): # Alliance implements
         pass
@@ -318,8 +325,6 @@ class Parser:
         self.semantic_stack.pop()
 
         self.code_gen_list.append(['JP', str(jp), '', ''])
-
-        print('kir',jpf)
 
         while len(self.break_stack) > 0 and self.break_stack[-1][0] > len(self.scope_stack):
             self.code_gen_list[self.break_stack[-1][1]][1] = str(len(self.code_gen_list))
@@ -416,10 +421,13 @@ class Parser:
             self.start_else_action()
         elif action == 'end_else':
             self.end_else_action()
+        elif action == 'add_func_sign':
+            self.add_func_sign_action()
+        elif action == 'addparam':
+            self.addparam_action()
         else:
             raise Exception('action not defined')
         
-
         print(action)
         print(self.semantic_stack)
         # # print(self.code_gen_list)
@@ -427,8 +435,6 @@ class Parser:
         print(self.code_gen_list[-1])
         print()
 
-         
-        
         # print(self.symbol_table_stack)
 
     def get_next_token(self):
