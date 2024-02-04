@@ -107,8 +107,8 @@ class Parser:
     def add_to_symbol_heap(self, varname, vartype, varsize):
         self.symbol_table_heap[varname].append([self.heap_pointer_addr, vartype, varsize])
         # print(varsize)
-        for i in range(int(varsize)):
-            self.set_zero(self.heap_pointer_addr + i * self.word_size, False)
+        # for i in range(int(varsize)):
+        #     self.set_zero(self.heap_pointer_addr + i * self.word_size, False)
         self.heap_pointer_addr += int(varsize) * self.word_size
 
     def add_to_symbol_stack(self, varname, vartype, varsize, set_zero=True):
@@ -440,13 +440,13 @@ class Parser:
 
         newaddr = self.get_temp_stack()
 
-        print('blah',newaddr)
 
         self.construct_address(id[0], id[1], self.temp_addr)
         self.construct_address(exp[0], exp[1], self.temp_addr + 1 * self.word_size)
         self.construct_address(newaddr, 'local', self.temp_addr + 2 * self.word_size)
 
-        self.code_gen_list.append(['ADD', '@' + str(self.temp_addr), '@' + str(self.temp_addr + 1 * self.word_size), '@' + str(self.temp_addr + 2 * self.word_size)])
+        self.code_gen_list.append(['ADD', str(self.temp_addr), '@' + str(self.temp_addr + 1 * self.word_size), '@' + str(self.temp_addr + 2 * self.word_size)])
+        
         
         self.semantic_stack.append([newaddr, 'indexed'])
     
