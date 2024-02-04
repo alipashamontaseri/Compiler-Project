@@ -149,7 +149,7 @@ class Parser:
     def func_start_action(self):
         self.semantic_stack.append('%')
         self.base_pointer_diff = 0
-        self.scope_stack.append(self.base_pointer_diff)
+
 
     def func_end_action(self):
         self.code_gen_list.append(["SUB", 
@@ -160,6 +160,7 @@ class Parser:
                                    '@'+str(self.temp_addr), str(self.base_pointer_addr), ''])
         self.code_gen_list.append(["JP", 
                                    '@' + str(self.stack_pointer_addr), '', ''])
+        
         # withour ret
         # set SP = BP - 2
         # BP = @(BP-1)
@@ -197,11 +198,18 @@ class Parser:
             elem_loc = elem[0]
             elem_type = elem[1]
             elem_size = elem[2]
-            elem_score = elem[3]
+            elem_scope = elem[3]
             # actual address is BP + elem_loc
-            self.semantic_stack.append([elem_loc, 'local'])
-            if elem_type == 'array':
-                self.semantic_stack[-1].append(None)
+
+            if elem_type not in ['array_func', 'array', 'int']:
+                raise ValueError("Error here")
+            
+            if elem_type == 'array_func':
+                self.semantic_stack.append([elem_loc, 'indexed', None])
+            else:
+                self.semantic_stack.append([elem_loc, 'local'])
+                if elem_type == 'array':
+                    self.semantic_stack[-1].append(None)
         elif self.symbol_table_heap[id] != []:
             elem = self.symbol_table_heap[id][-1]
             elem_loc = elem[0]
@@ -269,6 +277,10 @@ class Parser:
         if self.symbol_table_function.get(function_name) is not None:
             # should be handled if the function has been already declared
             pass
+        
+        for name, isarray in params:
+            self.add_to_symbol_stack(name, 'array_func' if isarray else 'int', 1)
+        
         # now suppose it hasn't been declared
         self.symbol_table_function[function_name] = {
             'params': params,
@@ -281,32 +293,42 @@ class Parser:
         # In the form of (type, isarray)
         params = []
         while len(self.semantic_stack) and self.semantic_stack[-1] != '%':
-            if self.semantic_stack[-1] != ',':
+            if self.semantic_stack.pop() != ',':
                 raise ValueError("There is something wrong here")
-            x = self.semantic_stack.pop(-1)
-            if x:
+            x = self.semantic_stack.pop()
+            if x != None:
                 params.append((x, False))
             else:
-                params.append((self.semantic_stack.pop(-1), True))
-        if self.semantic_stack[-1] != '%':
+                params.append((self.semantic_stack.pop(), True))
+        if self.semantic_stack.pop() != '%':
             raise ValueError("There is something wrong here")
-        self.semantic_stack.pop(-1)
         
-        return_type = 'void' if not params else 'int'
+        function_name = self.semantic_stack.pop()
+        return_type = self.semantic_stack.pop()
+        
+        if self.semantic_stack.pop() != '$':
+            raise ValueError("There is something wrong here")
         
         self.add_to_symbol_table_function(function_name, start_point, return_type, params)
     
     def addparam_action(self): #Alliance
         # Just push something to distinguish between parameters
-        self.semantci_stack.append(',')
+        self.semantic_stack.append(',')
 
     def prepare_call_action(self): # Alliance implements
         self.semantic_stack.append('$')
     
     def jump_action(self): # Alliance implements
         return_address_temp = self.get_temp_stack()
+        
         base_pointer_address_temp = self.get_temp_stack()
+        # sets the previous base pointer address
+        self.construct_address(base_pointer_address_temp, 'local', self.temp_addr)
+        self.code_gen_list(["ASSIGN", f"{self.base_pointer_addr}", f"@{self.temp_addr}"])
+        
         last_base_diff = self.base_pointer_diff
+        
+        # self.code_gen_list.append(['ASSIGN', self.base_pointer_addr, f"{5  self.word_size + self.temp_addr}", ""])
         
         params = []
         while self.semantic_stack[-1] != '$':
@@ -335,12 +357,19 @@ class Parser:
                 pass
             else:
                 raise ValueError("There is something wrong here")
-
-        # sets the previous base pointer address
-        self.code_gen_list.append(["ADD", f"#{last_base_diff}", self.base_pointer_addr, self.base_pointer_addr])
+        
+        # sets the return address
         self.construct_address(return_address_temp, 'local', self.temp_addr)
-        self.code_gen_list.append(["ASSIGN", f"#{len(self.code_gen_list)+1}", f"@{self.temp_addr}", ''])
+        self.code_gen_list.append(["ASSIGN", f"#{len(self.code_gen_list)+2}", f"@{self.temp_addr}", ''])
+        
         # TODO check if function exists
+        if self.symbol_table_function.get(function_name) is None:
+            pass
+        
+        # sets the current base pointer address (for the function to be called)
+        self.code_gen_list.append(["ADD", f"#{last_base_diff}", self.base_pointer_addr, self.base_pointer_addr])
+        
+        # finally jumps to the function that is being called
         self.code_gen_list.append(["JP", self.symbol_table_function[function_name]['start_point'], "", ""])
         self.base_pointer_diff = last_base_diff - 2
         if self.symbol_table_function[function_name]['return_type'] == 'int':
