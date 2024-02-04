@@ -104,7 +104,6 @@ class Parser:
 
     def add_semantic_error(self, error):
         self.semantic_errors.append((max(self.current_line, self.prev_token.line_number), error))
-        # print(error)
 
     def set_zero(self, loc, indirect):
         if not indirect:
@@ -120,7 +119,6 @@ class Parser:
     def add_to_symbol_stack(self, varname, vartype, varsize, set_zero=True):
         self.symbol_table_stack[varname].append([self.base_pointer_diff, vartype, varsize, len(self.scope_stack)])
         self.set_zero(self.temp_addr, False)
-        # print(varsize)
         if set_zero:
             for i in range(int(varsize)):
                 self.code_gen_list.append(['ADD', '#' + str(i * self.word_size + self.base_pointer_diff), str(self.base_pointer_addr), str(self.temp_addr)])
@@ -190,13 +188,11 @@ class Parser:
 
 
     def pvar_action(self):
-        # TODO: check if varname has been defined before for semantic analysis: Resolved, as this semantic check is note required
         
         until_dollar = [] 
         while(self.semantic_stack[-1] != '$'):
             until_dollar.append(self.semantic_stack.pop())
         
-        # print(until_dollar)
         self.semantic_stack.pop()
         if len(until_dollar) == 2: # simple int
             if until_dollar[-1] not in ['int', 'void']:
@@ -247,15 +243,11 @@ class Parser:
             self.semantic_stack.append([elem_loc, 'global'])
             if elem_type == 'array':
                 self.semantic_stack[-1].append(None)
-            # print(self.semantic_stack)
         elif self.symbol_table_function[id] != {}:
             self.semantic_stack.append(id)
         else:
-            # print('hey now')
             self.add_semantic_error(f"'{id}' is not defined")
             self.semantic_stack.append([0, 'local'])
-            # self.semantic_stack.append(id)
-            # TODO: should add something so that the code generator continues working
 
 
     def construct_address(self, addr, which, where): # addr is its address, which is either 'local' or 'global', where is the location we want actual address in
@@ -277,7 +269,6 @@ class Parser:
             self.add_semantic_error(f"Type mismatch in operands, Got {type_identifier(lhs)} instead of {type_identifier(rhs)}")
 
         
-        # print(lhs, rhs)
         self.semantic_stack.pop()
         self.semantic_stack.pop()
         self.construct_address(lhs[0], lhs[1], self.temp_addr)
@@ -291,7 +282,6 @@ class Parser:
         op = self.semantic_stack[-2]
         rhs = self.semantic_stack[-1]
         
-        # print(self.semantic_stack)
         self.semantic_stack.pop()
         self.semantic_stack.pop()
         self.semantic_stack.pop()
@@ -339,7 +329,7 @@ class Parser:
         start_point = len(self.code_gen_list)
         # In the form of (type, isarray)
         params = []
-        # print(self.semantic_stack)
+        
         while len(self.semantic_stack) and self.semantic_stack[-1] != '%':
             if self.semantic_stack.pop() != ',':
                 raise ValueError("There is something wrong here")
@@ -353,7 +343,7 @@ class Parser:
                 raise ValueError("All parameters should be either int or int[]")
             # pop $
             self.semantic_stack.pop()
-        # print(params)
+        
         if self.semantic_stack.pop() != '%':
             raise ValueError("There is something wrong here")
         
@@ -403,7 +393,6 @@ class Parser:
             self.semantic_stack.append(None)
             return
         
-        # print(function_name, params)
         
         if function_name == 'output':
             if len(params) != 1:
@@ -438,11 +427,9 @@ class Parser:
             
             if len(param) == 2:
                 if params_signature[i][1]:
-                    # print(params_signature)
                     self.add_semantic_error(f"Mismatch in type of argument {i+1} of '{function_name}'. Expected 'array' but got 'int' instead")
                     # just return something
                     self.semantic_stack.append([0, 'local'])
-                    # print('hey now1')
                     return
                 temp = self.get_temp_stack()
                 self.construct_address(loc, which, self.temp_addr)
@@ -453,7 +440,6 @@ class Parser:
                     self.add_semantic_error(f"Mismatch in type of argument {i+1} of '{function_name}'. Expected 'int' but got 'array' instead")
                     # just return something
                     self.semantic_stack.append([0, 'local'])
-                    # print('hey now2')
                     return
                 temp = self.get_temp_stack()
                 self.construct_address(loc, which, self.temp_addr)
@@ -590,7 +576,6 @@ class Parser:
             raise ValueError("Some Error here")
         
         value_addr, which = self.semantic_stack.pop()
-        # print('hello', value_addr, which)
         # first construct the absolute address of the return value and store this address in temp[4]
         self.construct_address(value_addr, which, self.temp_addr + 4 * self.word_size)
     
@@ -616,7 +601,6 @@ class Parser:
                                    '@' + str(self.temp_addr + 5 * self.word_size), '', ''])
 
     def handle_actions(self, action):
-        # print(action)
         if action == 'pnext':
             self.pnext_action()
         elif action == 'type':
@@ -678,12 +662,6 @@ class Parser:
         else:
             raise Exception('action not defined')
         
-        # print(self.semantic_stack)
-        # print(len(self.code_gen_list))
-        # # print(self.code_gen_list)
-        # print()
-
-        # print(self.symbol_table_stack)
 
     def get_next_token(self):
         if self.look_ahead and self.look_ahead.get_terminal() == END_TOKEN:
@@ -692,7 +670,6 @@ class Parser:
         self.prev_token = self.look_ahead
         self.look_ahead = self.scanner.get_next_token()
         self.last_token = self.look_ahead
-        # print("Reading input, current_terminal:", self.look_ahead)
 
     def add_node(self, name, parent):
         if not parent:
@@ -748,7 +725,6 @@ class Parser:
                 continue
             
             action = self.parse_table[current_node][self.look_ahead.get_terminal()]
-            # print(f"Action[{current_node}][{self.look_ahead.get_terminal()}] = {action}")
             
             if action is None:
                 if self.has_epsilon[current_node]:
@@ -784,7 +760,6 @@ class Parser:
             lines = []
             for pre, _, node in RenderTree(self.root):
                 line = "%s%s" % (pre, node.name)
-                # print(line)
                 lines.append(line)
             f.write('\n'.join(lines))
 
