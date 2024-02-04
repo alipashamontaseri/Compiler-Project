@@ -93,6 +93,10 @@ class Parser:
                     parse_table[nt][terminal] = None
 
         self.parse_table = parse_table
+        
+        #Maybe TODO: Handle setting zero initial variables
+        self.jump_main_line = len(self.code_gen_list)
+        self.code_gen_list.append(["JP", "?", "", ""])
 
     def set_zero(self, loc, indirect):
         if not indirect:
@@ -194,6 +198,7 @@ class Parser:
 
     def pid_action(self):
         id = self.look_ahead.lexeme
+
         if self.symbol_table_stack[id] != []:
             elem = self.symbol_table_stack[id][-1]
             elem_loc = elem[0]
@@ -282,6 +287,9 @@ class Parser:
         for name, isarray in params:
             self.add_to_symbol_stack(name, 'array_func' if isarray else 'int', 1)
         
+        if function_name == 'main':
+            self.code_gen_list[self.jump_main_line][1] = str(start_point)
+        
         # now suppose it hasn't been declared
         self.symbol_table_function[function_name] = {
             'params': params,
@@ -340,6 +348,15 @@ class Parser:
 
         self.semantic_stack.pop(-1)
         function_name = self.semantic_stack.pop(-1)
+        
+        if function_name == 'output':
+            if len(params) != 1:
+                raise ValueError("output function requires exactly one parameter")
+            if len(params[0]) != 2:
+                raise ValueError("Only integer values can be printed, not arrays!")
+            self.construct_address(params[0][0], params[0][1], self.temp_addr)
+            self.code_gen_list.append(["PRINT", f"@{self.temp_addr}", "", ""])
+            return
         
         params = params[::-1]
         
