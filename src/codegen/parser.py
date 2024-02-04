@@ -394,10 +394,10 @@ class Parser:
         
         # finally jumps to the function that is being called
         self.code_gen_list.append(["JP", self.symbol_table_function[function_name]['start_point'], "", ""])
-        self.base_pointer_diff = last_base_diff - 2
+        self.base_pointer_diff = last_base_diff - 2 * self.word_size
         if self.symbol_table_function[function_name]['return_type'] == 'int':
             self.semantic_stack.append([self.base_pointer_diff, 'local'])
-            self.base_pointer_diff += 1
+            self.base_pointer_diff += 1 * self.word_size
         else:
             self.semantic_stack.append(None)
     
