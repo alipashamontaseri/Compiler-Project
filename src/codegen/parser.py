@@ -231,7 +231,6 @@ class Parser:
         self.construct_address(lhs[0], lhs[1], self.temp_addr)
         self.construct_address(rhs[0], rhs[1], self.temp_addr + 1 * self.word_size)
         self.code_gen_list.append(['ASSIGN', '@' + str(self.temp_addr + 1 * self.word_size), '@' + str(self.temp_addr), ''])
-        print(lhs)
         self.semantic_stack.append(lhs)
 
     def eval_action(self):
@@ -245,7 +244,6 @@ class Parser:
         self.semantic_stack.pop()
         self.semantic_stack.pop()
 
-        print(lhs)
 
         self.construct_address(lhs[0], lhs[1], self.temp_addr)
         self.construct_address(rhs[0], rhs[1], self.temp_addr + 1 * self.word_size)
@@ -344,10 +342,32 @@ class Parser:
         self.code_gen_list.append(["JP", '?', '', ''])
 
 
+    def start_if_action(self):
+        addr = self.semantic_stack[-1]
+        self.semantic_stack.pop()
+        
+        self.construct_address(addr[0], addr[1], self.temp_addr)
+        
+        self.semantic_stack.append(len(self.code_gen_list))
 
+        self.code_gen_list.append(['JPF', '@' + str(self.temp_addr), '?' , ''])
+
+
+    def start_else_action(self):
+        line_addr = self.semantic_stack[-1]
+        self.semantic_stack.pop()
+        self.semantic_stack.append(len(self.code_gen_list))
+        self.code_gen_list.append(["JP", "?" ,"" ,""])
+        self.code_gen_list[int(line_addr)][2] = len(self.code_gen_list)
+        
+
+    def end_else_action(self):
+        line_addr = self.semantic_stack[-1]
+        self.semantic_stack.pop()
+        self.code_gen_list[int(line_addr)][1] = len(self.code_gen_list)
 
     def handle_actions(self, action):
-        print(action)
+        # print(action)
         if action == 'pnext':
             self.pnext_action()
         elif action == 'type':
@@ -390,11 +410,19 @@ class Parser:
             self.check_condition_while_action()
         elif action == 'break':
             self.break_action()
+        elif action == 'start_if':
+            self.start_if_action()
+        elif action == 'start_else':
+            self.start_else_action()
+        elif action == 'end_else':
+            self.end_else_action()
+        else:
+            raise Exception('action not defined')
         
 
         print(action)
         print(self.semantic_stack)
-        # print(self.code_gen_list)
+        # # print(self.code_gen_list)
         print(len(self.code_gen_list))
         print(self.code_gen_list[-1])
         print()
