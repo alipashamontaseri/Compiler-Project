@@ -147,6 +147,7 @@ class Parser:
     # stack_pointer , base_pointer
 
     def func_start_action(self):
+        self.semantic_stack.append('%')
         self.base_pointer_diff = 0
         self.scope_stack.append(self.base_pointer_diff)
 
@@ -259,14 +260,40 @@ class Parser:
             self.code_gen_list.append(['EQ', '@' + str(self.temp_addr), '@' + str(self.temp_addr + 1 * self.word_size), '@' + str(self.temp_addr + 2 * self.word_size)])
         self.semantic_stack.append([newaddr, 'local'])
     
-    def add_to_symbol_table_function(self, function_name, start_point, return_type, args_type): # Alliance
-        pass
+    def add_to_symbol_table_function(self, function_name, start_point, return_type, params): # Alliance
+        if self.symbol_table_function.get(function_name) is not None:
+            # should be handled if the function has been already declared
+            pass
+        # now suppose it hasn't been declared
+        self.symbol_table_function[function_name] = {
+            'params': params,
+            'start_point': start_point,
+            'return_type': return_type
+        }
 
     def add_func_sign_action(self): #Alliance
-        pass
+        start_point = len(self.code_gen_list)
+        # In the form of (type, isarray)
+        params = []
+        while len(self.semantic_stack) and self.semantic_stack[-1] != '%':
+            if self.semantic_stack[-1] != ',':
+                raise ValueError("There is something wrong here")
+            x = self.semantic_stack.pop(-1)
+            if x:
+                params.append((x, False))
+            else:
+                params.append((self.semantic_stack.pop(-1), True))
+        if self.semantic_stack[-1] != '%':
+            raise ValueError("There is something wrong here")
+        self.semantic_stack.pop(-1)
+        
+        return_type = 'void' if not params else 'int'
+        
+        self.add_to_symbol_table_function(function_name, start_point, return_type, params)
     
     def addparam_action(self): #Alliance
-        pass
+        # Just push something to distinguish between parameters
+        self.semantci_stack.append(',')
 
     def prepare_call_action(self): # Alliance implements
         pass
@@ -308,6 +335,9 @@ class Parser:
         
         self.semantic_stack.append([newaddr, 'indexed'])
     
+    def parray_action(self):
+        # Just push something to distinguish between array parameters and integers
+        self.semantic_stack.append(None)
 
     def pop_action(self):
         self.semantic_stack.pop()
@@ -425,6 +455,8 @@ class Parser:
             self.add_func_sign_action()
         elif action == 'addparam':
             self.addparam_action()
+        elif action == 'parray':
+            self.parray_action()
         else:
             raise Exception('action not defined')
         
