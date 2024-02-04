@@ -306,6 +306,7 @@ class Parser:
         start_point = len(self.code_gen_list)
         # In the form of (type, isarray)
         params = []
+        # print(self.semantic_stack)
         while len(self.semantic_stack) and self.semantic_stack[-1] != '%':
             if self.semantic_stack.pop() != ',':
                 raise ValueError("There is something wrong here")
@@ -314,6 +315,12 @@ class Parser:
                 params.append((x, False))
             else:
                 params.append((self.semantic_stack.pop(), True))
+            # pop int
+            if self.semantic_stack.pop() != 'int':
+                raise ValueError("All parameters should be either int or int[]")
+            # pop $
+            self.semantic_stack.pop()
+        print(params)
         if self.semantic_stack.pop() != '%':
             raise ValueError("There is something wrong here")
         
@@ -332,6 +339,10 @@ class Parser:
 
     def prepare_call_action(self): # Alliance implements
         self.semantic_stack.append('$')
+    
+    def pdollar_action(self):
+        self.semantic_stack.append('$')
+        self.semantic_stack.append('int')
     
     def jump_action(self): # Alliance implements
         return_address_temp = self.get_temp_stack()
@@ -354,6 +365,8 @@ class Parser:
 
         self.semantic_stack.pop(-1)
         function_name = self.semantic_stack.pop(-1)
+        
+        print(function_name, params)
         
         if function_name == 'output':
             if len(params) != 1:
@@ -592,6 +605,8 @@ class Parser:
             self.parray_action()
         elif action == 'return_value':
             self.return_value_action()
+        elif action == 'pdollar':
+            self.pdollar_action()
         else:
             raise Exception('action not defined')
         

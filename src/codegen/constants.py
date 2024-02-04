@@ -9,7 +9,7 @@ rules = {"Program": [["DeclarationList"]],
         "VarDeclarationPrime": [[";"], ["[", "#pnext", "NUM", "]", ";"]],
         "FunDeclarationPrime": [["#scope_plus", "#func_start", "(", "Params", ")", "#add_func_sign" , "CompoundStmt", "#func_end", "#scope_minus"]],  # added actions until here
         "TypeSpecifier": [["#type", "int"], ["#type", "void"]], 
-        "Params": [["int", "#pnext", "ID", "ParamPrime", "#addparam", "ParamList"], ["void"]], 
+        "Params": [["#pdollar", "int", "#pnext", "ID", "ParamPrime", "#addparam", "ParamList"], ["void"]], 
         "ParamList": [[",", "Param", "ParamList"], []], 
         "Param": [["DeclarationInitial", "ParamPrime", "#addparam"]], 
         "ParamPrime": [["[", "#parray", "]"], []], 
