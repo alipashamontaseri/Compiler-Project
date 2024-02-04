@@ -203,7 +203,7 @@ class Parser:
                 raise ValueError("There is something wrong here")
             if until_dollar[-1] == 'void':
                 # Semantic Analysis: Void Type
-                self.add_semantic_error(f"Illegal type of void for'{until_dollar[0]}'")
+                self.add_semantic_error(f"Illegal type of void for '{until_dollar[0]}'")
             if len(self.scope_stack) == 0: # global variable
                 self.add_to_symbol_heap(until_dollar[0], 'int', 1)
             else: # local variable
@@ -274,7 +274,7 @@ class Parser:
         type_identifier = lambda x: "int" if len(x) == 2 else "array"
 
         if len(lhs) != len(rhs):
-            self.add_semantic_error(f"Type mismatch in operands, Got '{type_identifier(rhs)}' instead of '{type_identifier(lhs)}'")
+            self.add_semantic_error(f"Type mismatch in operands, Got {type_identifier(lhs)} instead of {type_identifier(rhs)}")
 
         
         # print(lhs, rhs)
@@ -299,7 +299,7 @@ class Parser:
         type_identifier = lambda x: "int" if len(x) == 2 else "array"
 
         if len(lhs) != len(rhs):
-            self.add_semantic_error(f"Type mismatch in operands, Got '{type_identifier(rhs)}' instead of '{type_identifier(lhs)}'")
+            self.add_semantic_error(f"Type mismatch in operands, Got {type_identifier(lhs)} instead of {type_identifier(rhs)}")
 
         self.construct_address(lhs[0], lhs[1], self.temp_addr)
         self.construct_address(rhs[0], rhs[1], self.temp_addr + 1 * self.word_size)
@@ -439,7 +439,7 @@ class Parser:
             if len(param) == 2:
                 if params_signature[i][1]:
                     # print(params_signature)
-                    self.add_semantic_error(f"Mismatch in type of argument {i+1} for '{function_name}'. Expected int but got array instead")
+                    self.add_semantic_error(f"Mismatch in type of argument {i+1} of '{function_name}'. Expected 'array' but got 'int' instead")
                     # just return something
                     self.semantic_stack.append([0, 'local'])
                     # print('hey now1')
@@ -450,7 +450,7 @@ class Parser:
                 self.code_gen_list.append(["ASSIGN", f"@{self.temp_addr}", f"@{self.temp_addr + self.word_size}", ''])
             elif len(param) == 3:
                 if not params_signature[i][1]:
-                    self.add_semantic_error(f"Mismatch in type of argument {i+1} for '{function_name}'. Expected array but got int instead")
+                    self.add_semantic_error(f"Mismatch in type of argument {i+1} of '{function_name}'. Expected 'int' but got 'array' instead")
                     # just return something
                     self.semantic_stack.append([0, 'local'])
                     # print('hey now2')
