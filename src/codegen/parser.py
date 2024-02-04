@@ -229,7 +229,8 @@ class Parser:
         self.construct_address(lhs[0], lhs[1], self.temp_addr)
         self.construct_address(rhs[0], rhs[1], self.temp_addr + 1 * self.word_size)
         self.code_gen_list.append(['ASSIGN', '@' + str(self.temp_addr + 1 * self.word_size), '@' + str(self.temp_addr), ''])
-
+        print(lhs)
+        self.semantic_stack.append(lhs)
 
     def eval_action(self):
     
@@ -297,7 +298,8 @@ class Parser:
         self.semantic_stack.append([newaddr, 'indexed'])
     
 
-
+    def pop_action(self):
+        self.semantic_stack.pop()
 
     def handle_actions(self, action):
         # print(action)
@@ -333,6 +335,8 @@ class Parser:
             self.jump_action()
         elif action == 'pusharg':
             self.pusharg_action()
+        elif action == 'pop':
+            self.pop_action()
 
         print(action)
         print(self.semantic_stack)
