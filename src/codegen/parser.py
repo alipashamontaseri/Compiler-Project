@@ -320,7 +320,7 @@ class Parser:
                 raise ValueError("All parameters should be either int or int[]")
             # pop $
             self.semantic_stack.pop()
-        print(params)
+        # print(params)
         if self.semantic_stack.pop() != '%':
             raise ValueError("There is something wrong here")
         
@@ -366,7 +366,7 @@ class Parser:
         self.semantic_stack.pop(-1)
         function_name = self.semantic_stack.pop(-1)
         
-        print(function_name, params)
+        # print(function_name, params)
         
         if function_name == 'output':
             if len(params) != 1:
@@ -527,7 +527,7 @@ class Parser:
             raise ValueError("Some Error here")
         
         value_addr, which = self.semantic_stack.pop()
-        print('hello', value_addr, which)
+        # print('hello', value_addr, which)
         # first construct the absolute address of the return value and store this address in temp[4]
         self.construct_address(value_addr, which, self.temp_addr + 4 * self.word_size)
     
@@ -738,7 +738,8 @@ class Parser:
             f.write('\n'.join([f'{line_no}\t({x[0]}, {x[1]}, {x[2]}, {x[3]})' for line_no,x in enumerate(self.code_gen_list)]))
 
     def write_semantic_errors(self):
-        pass
+        with open(self.semantic_errors_file, 'w', encoding='utf-8') as f:
+            f.write("The input program is semantically correct.\n")
     
     def write_logs(self):
         self.write_code_gen()

@@ -7,7 +7,7 @@ current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 
-DEBUG = True
+DEBUG = False
 
 class Compiler:
     def __init__(self, inputfile="input.txt", compile_mode="full",
