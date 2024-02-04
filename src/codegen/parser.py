@@ -322,6 +322,7 @@ class Parser:
         if self.semantic_stack.pop() != '$':
             raise ValueError("There is something wrong here")
         
+        params = params[::-1]
         self.add_to_symbol_table_function(function_name, start_point, return_type, params)
     
     def addparam_action(self): #Alliance
