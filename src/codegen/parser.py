@@ -379,7 +379,7 @@ class Parser:
         
         # sets the return address
         self.construct_address(return_address_temp, 'local', self.temp_addr)
-        self.code_gen_list.append(["ASSIGN", f"#{len(self.code_gen_list)+2}", f"@{self.temp_addr}", ''])
+        self.code_gen_list.append(["ASSIGN", f"#{len(self.code_gen_list)+3}", f"@{self.temp_addr}", ''])
         
         # TODO check if function exists
         if self.symbol_table_function.get(function_name) is None:
