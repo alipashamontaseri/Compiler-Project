@@ -161,9 +161,9 @@ class Parser:
         # set SP = BP - 2
         # BP = @(BP-1)
         self.code_gen_list.append(["SUB", 
-                                   str(self.base_pointer_addr), '#2', str(self.stack_pointer_addr)])
+                                   str(self.base_pointer_addr), '#8', str(self.stack_pointer_addr)])
         self.code_gen_list.append(["SUB", 
-                                   str(self.base_pointer_addr), '#1', str(self.temp_addr)])
+                                   str(self.base_pointer_addr), '#4', str(self.temp_addr)])
         self.code_gen_list.append(["ASSIGN", 
                                    '@'+str(self.temp_addr), str(self.base_pointer_addr), ''])
         self.code_gen_list.append(["JP", 
@@ -510,7 +510,7 @@ class Parser:
         # self.code_gen_list.append(["ASSIGN", , ,])
         
         self.code_gen_list.append(["SUB", 
-                                   str(self.base_pointer_addr), '#2', str(self.stack_pointer_addr)])
+                                   str(self.base_pointer_addr), '#8', str(self.stack_pointer_addr)])
         # Now copy the return address to temp[5]
         self.code_gen_list.append(["ASSIGN", f"@{self.stack_pointer_addr}", str(self.temp_addr + 5 * self.word_size), ""])
         
@@ -518,7 +518,7 @@ class Parser:
         self.code_gen_list.append(["ASSIGN", f"@{self.temp_addr + 4 * self.word_size}", f"@{self.stack_pointer_addr}", ""])
 
         self.code_gen_list.append(["SUB", 
-                                   str(self.base_pointer_addr), '#1', str(self.temp_addr)])
+                                   str(self.base_pointer_addr), '#4', str(self.temp_addr)])
         self.code_gen_list.append(["ASSIGN", 
                                    '@'+str(self.temp_addr), str(self.base_pointer_addr), ''])
         
@@ -588,7 +588,7 @@ class Parser:
         
         print(self.semantic_stack)
         print(len(self.code_gen_list))
-        print(self.code_gen_list)
+        # print(self.code_gen_list)
         print()
 
         # print(self.symbol_table_stack)
