@@ -17,7 +17,7 @@ class Compiler:
     symbol_table_file="symbol_table.txt",
     parse_tree_file="parse_tree.txt",
     syntax_errors_file="syntax_errors.txt",
-    code_gen_file="output.txt",
+    code_gen_file=os.path.join('..', 'test_data', 'Phase3_Interpreter', "output.txt"),
     semantic_error_file="semantic_errors.txt"
     ):
 
