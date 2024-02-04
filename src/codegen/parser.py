@@ -480,7 +480,32 @@ class Parser:
         self.code_gen_list[int(line_addr)][1] = len(self.code_gen_list)
 
     def return_value_action(self):
-        pass
+        
+        if len(self.semantic_stack[-1]) != 2:
+            raise ValueError("Some Error here")
+        
+        value_addr, which = self.semantic_stack.pop()
+        
+        # first construct the absolute address of the return value and store this address in temp[4]
+        self.construct_address(value_addr, which, self.temp_addr + 4 * self.word_size)
+    
+        # self.code_gen_list.append(["ASSIGN", , ,])
+        
+        self.code_gen_list.append(["SUB", 
+                                   str(self.base_pointer_addr), '#2', str(self.stack_pointer_addr)])
+        # Now copy the return address to temp[5]
+        self.code_gen_list.append(["ASSIGN", f"@{self.stack_pointer_addr}", str(self.temp_addr + 5 * self.word_size), ""])
+        
+
+        self.code_gen_list.append(["ASSIGN", f"@{self.temp_addr + 4 * self.word_size}", f"@{self.stack_pointer_addr}", ""])
+
+        self.code_gen_list.append(["SUB", 
+                                   str(self.base_pointer_addr), '#1', str(self.temp_addr)])
+        self.code_gen_list.append(["ASSIGN", 
+                                   '@'+str(self.temp_addr), str(self.base_pointer_addr), ''])
+        
+        self.code_gen_list.append(["JP", 
+                                   '@' + str(self.temp_addr + 5 * self.word_size), '', ''])
 
     def handle_actions(self, action):
         # print(action)
