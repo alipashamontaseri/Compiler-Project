@@ -121,7 +121,7 @@ class Parser:
     def get_temp_stack(self):
         addr = self.base_pointer_diff
         self.code_gen_list.append(['ADD', str(self.base_pointer_addr), '#' + str(addr), str(self.temp_addr + 6 * self.word_size)])
-        self.set_zero(self.temp_addr + 5 * self.word_size, True)
+        self.set_zero(self.temp_addr + 6 * self.word_size, True)
         self.base_pointer_diff += 1 * self.word_size
         return addr
 
@@ -218,7 +218,8 @@ class Parser:
         elif which == 'local':
             self.code_gen_list.append(['ADD', self.base_pointer_addr, '#' + str(addr), str(where)])
         elif which == 'indexed':
-            self.code_gen_list.append(['ADD', self.base_pointer_addr, str(addr), str(where)])
+            self.code_gen_list.append(['ADD', self.base_pointer_addr, '#' + str(addr), str(where)])
+            self.code_gen_list.append(['ASSIGN', '@' + str(where), str(where), ''])
     def assign_action(self):
         lhs = self.semantic_stack[-2]
         rhs = self.semantic_stack[-1]
@@ -242,7 +243,9 @@ class Parser:
         self.semantic_stack.pop()
         self.semantic_stack.pop()
         self.semantic_stack.pop()
-    
+
+        print(lhs)
+
         self.construct_address(lhs[0], lhs[1], self.temp_addr)
         self.construct_address(rhs[0], rhs[1], self.temp_addr + 1 * self.word_size)
         newaddr = self.get_temp_stack()
@@ -280,7 +283,7 @@ class Parser:
         self.code_gen_list.append(['ASSIGN', '#' + str(num), '@' + str(self.temp_addr), ''])
         self.semantic_stack.append([addr, 'local'])
 
-    def get_element_action(self): # pasha implements
+    def get_element_action(self):
         id = self.semantic_stack[-2]
         exp = self.semantic_stack[-1]
         
@@ -288,6 +291,8 @@ class Parser:
         self.semantic_stack.pop()
 
         newaddr = self.get_temp_stack()
+
+        print('blah',newaddr)
 
         self.construct_address(id[0], id[1], self.temp_addr)
         self.construct_address(exp[0], exp[1], self.temp_addr + 1 * self.word_size)
@@ -302,7 +307,7 @@ class Parser:
         self.semantic_stack.pop()
 
     def handle_actions(self, action):
-        # print(action)
+        print(action)
         if action == 'pnext':
             self.pnext_action()
         elif action == 'type':
@@ -340,7 +345,9 @@ class Parser:
 
         print(action)
         print(self.semantic_stack)
-        print(self.code_gen_list)
+        # print(self.code_gen_list)
+        print(len(self.code_gen_list))
+        print(self.code_gen_list[-1])
         print()
 
          
@@ -457,6 +464,7 @@ class Parser:
                 f.write('\n'.join([f"#{line_number} : syntax error, {error}" for line_number, error in self.errors]))
 
     def write_code_gen(self):
+        self.code_gen_list = self.code_gen_list[:-4]
         with open(self.code_gen_file, 'w', encoding="utf-8") as f:
             f.write('\n'.join([f'{line_no}\t({x[0]}, {x[1]}, {x[2]}, {x[3]})' for line_no,x in enumerate(self.code_gen_list)]))
 
