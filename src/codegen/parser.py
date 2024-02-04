@@ -41,6 +41,7 @@ class Parser:
         self.symbol_table_heap = defaultdict(lambda: []) # dict -> list[(address, type, size)]
         self.symbol_table_stack = defaultdict(lambda: []) # dict -> list[(address, type, size, scope)]
         self.symbol_table_function = defaultdict(lambda: {}) # dict -> each element has following keys: params->[(name, isarray), ...], start_point->PC to where function begins, return_type 
+        self.symbol_table_function['output'] = {'return_type': 'void'}
         self.scope_stack = []
 
         self.stack_pointer_addr = 0
@@ -54,6 +55,9 @@ class Parser:
         self.stack_pointer_start = 1000 * self.word_size
         self.base_pointer_diff = 0
         self.heap_pointer_addr = 10 * self.word_size
+
+        # initializing while depth
+        self.while_depth = 0
 
         # initializing BP and SP
         self.code_gen_list.append(['ASSIGN', f'#{self.stack_pointer_start}', f'{self.stack_pointer_addr}', ''])
@@ -98,6 +102,11 @@ class Parser:
         self.jump_main_line = len(self.code_gen_list)
         self.code_gen_list.append(["JP", "?", "", ""])
 
+    def add_semantic_error(self, error):
+        # print(self.prev_token, self.prev_token.line_number)
+        # print(self.last_token, self.last_token.line_number)
+        self.semantic_errors.append((self.prev_token.line_number, error))
+
     def set_zero(self, loc, indirect):
         if not indirect:
             self.code_gen_list.append(['ASSIGN', '#0', str(loc), ''])
@@ -106,9 +115,7 @@ class Parser:
 
     def add_to_symbol_heap(self, varname, vartype, varsize):
         self.symbol_table_heap[varname].append([self.heap_pointer_addr, vartype, varsize])
-        # print(varsize)
-        # for i in range(int(varsize)):
-        #     self.set_zero(self.heap_pointer_addr + i * self.word_size, False)
+        
         self.heap_pointer_addr += int(varsize) * self.word_size
 
     def add_to_symbol_stack(self, varname, vartype, varsize, set_zero=True):
@@ -182,13 +189,20 @@ class Parser:
 
 
     def pvar_action(self):
-        # TODO: check if varname has been defined before for semantic analysis
+        # TODO: check if varname has been defined before for semantic analysis: Resolved, as this semantic check is note required
+        
         until_dollar = [] 
         while(self.semantic_stack[-1] != '$'):
             until_dollar.append(self.semantic_stack.pop())
+        
         # print(until_dollar)
         self.semantic_stack.pop()
         if len(until_dollar) == 2: # simple int
+            if until_dollar[-1] not in ['int', 'void']:
+                raise ValueError("There is something wrong here")
+            if until_dollar[-1] == 'void':
+                # Semantic Analysis: Void Type
+                self.add_semantic_error(f"Illegal type of void for'{until_dollar[0]}'")
             if len(self.scope_stack) == 0: # global variable
                 self.add_to_symbol_heap(until_dollar[0], 'int', 1)
             else: # local variable
@@ -205,6 +219,7 @@ class Parser:
         id = self.look_ahead.lexeme
 
         if self.symbol_table_stack[id] != []:
+            # local variable
             elem = self.symbol_table_stack[id][-1]
             elem_loc = elem[0]
             elem_type = elem[1]
@@ -222,6 +237,7 @@ class Parser:
                 if elem_type == 'array':
                     self.semantic_stack[-1].append(None)
         elif self.symbol_table_heap[id] != []:
+            # global variable
             elem = self.symbol_table_heap[id][-1]
             elem_loc = elem[0]
             elem_type = elem[1]
@@ -230,9 +246,14 @@ class Parser:
             if elem_type == 'array':
                 self.semantic_stack[-1].append(None)
             # print(self.semantic_stack)
-        else:
-            #Alliance
+        elif self.symbol_table_function[id] != {}:
             self.semantic_stack.append(id)
+        else:
+            # print('hey now')
+            self.add_semantic_error(f"'{id}' is not defined")
+            self.semantic_stack.append([0, 'local'])
+            # self.semantic_stack.append(id)
+            # TODO: should add something so that the code generator continues working
 
 
     def construct_address(self, addr, which, where): # addr is its address, which is either 'local' or 'global', where is the location we want actual address in
@@ -247,6 +268,12 @@ class Parser:
     def assign_action(self):
         lhs = self.semantic_stack[-2]
         rhs = self.semantic_stack[-1]
+        
+        type_identifier = lambda x: "int" if len(x) == 2 else "array"
+
+        if len(lhs) != len(rhs):
+            self.add_semantic_error(f"Type mismatch in operands, Got '{type_identifier(rhs)}' instead of '{type_identifier(lhs)}'")
+
         
         # print(lhs, rhs)
         self.semantic_stack.pop()
@@ -267,6 +294,10 @@ class Parser:
         self.semantic_stack.pop()
         self.semantic_stack.pop()
 
+        type_identifier = lambda x: "int" if len(x) == 2 else "array"
+
+        if len(lhs) != len(rhs):
+            self.add_semantic_error(f"Type mismatch in operands, Got '{type_identifier(rhs)}' instead of '{type_identifier(lhs)}'")
 
         self.construct_address(lhs[0], lhs[1], self.temp_addr)
         self.construct_address(rhs[0], rhs[1], self.temp_addr + 1 * self.word_size)
@@ -366,6 +397,10 @@ class Parser:
         self.semantic_stack.pop(-1)
         function_name = self.semantic_stack.pop(-1)
         
+        if not isinstance(function_name, str):
+            self.semantic_stack.append(None)
+            return
+        
         # print(function_name, params)
         
         if function_name == 'output':
@@ -377,27 +412,48 @@ class Parser:
             self.code_gen_list.append(["PRINT", f"@{self.temp_addr}", "", ""])
             self.semantic_stack.append(None)
             return
-        
+        if self.symbol_table_function.get(function_name) is None:
+            self.semantic_stack.append(None)
+            return
         params = params[::-1]
         
         # TODO: semantic analysis, check function's signature
         
-        for param in params:
+        # Semantic Analysis: Actual and formal parameters number matching
+        if len(params) != len(self.symbol_table_function[function_name]['params']):
+            self.add_semantic_error(f"Mismatch in numbers of arguments of '{function_name}'")
+            self.semantic_stack.append(None)
+            return
+        
+        params_signature = self.symbol_table_function[function_name]['params']
+        
+        for i, param in enumerate(params):
             loc = param[0]
             which = param[1]
             
+            # Semantic Analysis: Actual and formal parameters type matching
+            
             if len(param) == 2:
+                if params_signature[i][1]:
+                    # print(params_signature)
+                    self.add_semantic_error(f"Mismatch in type of argument {i+1} for '{function_name}'. Expected int but got array instead")
+                    self.semantic_stack.append(None)
+                    # print('hey now1')
+                    return
                 temp = self.get_temp_stack()
                 self.construct_address(loc, which, self.temp_addr)
                 self.construct_address(temp, 'local', self.temp_addr + self.word_size)
                 self.code_gen_list.append(["ASSIGN", f"@{self.temp_addr}", f"@{self.temp_addr + self.word_size}", ''])
             elif len(param) == 3:
-                # TODO array
+                if not params_signature[i][1]:
+                    self.add_semantic_error(f"Mismatch in type of argument {i+1} for '{function_name}'. Expected array but got int instead")
+                    self.semantic_stack.append(None)
+                    # print('hey now2')
+                    return
                 temp = self.get_temp_stack()
                 self.construct_address(loc, which, self.temp_addr)
                 self.construct_address(temp, 'local', self.temp_addr + self.word_size)
                 self.code_gen_list.append(["ASSIGN", f"{self.temp_addr}", f"@{self.temp_addr + self.word_size}", ''])
-                pass
             else:
                 raise ValueError("There is something wrong here")
         
@@ -405,9 +461,6 @@ class Parser:
         self.construct_address(return_address_temp, 'local', self.temp_addr)
         self.code_gen_list.append(["ASSIGN", f"#{len(self.code_gen_list)+3}", f"@{self.temp_addr}", ''])
         
-        # TODO check if function exists
-        if self.symbol_table_function.get(function_name) is None:
-            pass
         
         # sets the current base pointer address (for the function to be called)
         self.code_gen_list.append(["ADD", f"#{last_base_diff}", self.base_pointer_addr, self.base_pointer_addr])
@@ -464,9 +517,11 @@ class Parser:
 
 
     def while_start_action(self):
+        self.while_depth += 1
         self.semantic_stack.append(len(self.code_gen_list))
 
     def while_end_action(self):
+        self.while_depth -= 1
         
         jpf = self.semantic_stack[-1]
         jp = self.semantic_stack[-2]
@@ -493,6 +548,8 @@ class Parser:
         self.code_gen_list.append(["JPF", '@' + str(self.temp_addr), '?', ''])
 
     def break_action(self):
+        if self.while_depth == 0:
+            self.add_semantic_error("No 'while' found for 'break'")
         self.break_stack.append([len(self.scope_stack), len(self.code_gen_list)])
         self.code_gen_list.append(["JP", '?', '', ''])
 
@@ -626,6 +683,7 @@ class Parser:
         if self.look_ahead and self.look_ahead.get_terminal() == END_TOKEN:
             self.look_ahead = None
             return
+        self.prev_token = self.look_ahead
         self.look_ahead = self.scanner.get_next_token()
         self.last_token = self.look_ahead
         # print("Reading input, current_terminal:", self.look_ahead)
@@ -732,14 +790,22 @@ class Parser:
                 f.write('\n'.join([f"#{line_number} : syntax error, {error}" for line_number, error in self.errors]))
 
     def write_code_gen(self):
-        self.code_gen_list = self.code_gen_list[:-5]
-        self.code_gen_list.append(['ASSIGN', '#0' ,'0', ''])
-        with open(self.code_gen_file, 'w', encoding="utf-8") as f:
-            f.write('\n'.join([f'{line_no}\t({x[0]}, {x[1]}, {x[2]}, {x[3]})' for line_no,x in enumerate(self.code_gen_list)]))
+        if len(self.semantic_errors):
+            with open(self.code_gen_file, 'w', encoding="utf-8") as f:
+                f.write("The code has not been generated.\n")
+        else:
+            self.code_gen_list = self.code_gen_list[:-5]
+            self.code_gen_list.append(['ASSIGN', '#0' ,'0', ''])
+            with open(self.code_gen_file, 'w', encoding="utf-8") as f:
+                f.write('\n'.join([f'{line_no}\t({x[0]}, {x[1]}, {x[2]}, {x[3]})' for line_no,x in enumerate(self.code_gen_list)]))
 
     def write_semantic_errors(self):
-        with open(self.semantic_errors_file, 'w', encoding='utf-8') as f:
-            f.write("The input program is semantically correct.\n")
+        if len(self.semantic_errors):
+            with open(self.semantic_errors_file, 'w', encoding='utf-8') as f:
+                f.write('\n'.join([f"#{line_no} : Semantic Error! {error}." for line_no, error in self.semantic_errors]))
+        else:
+            with open(self.semantic_errors_file, 'w', encoding='utf-8') as f:
+                f.write("The input program is semantically correct.\n")
     
     def write_logs(self):
         self.write_code_gen()
