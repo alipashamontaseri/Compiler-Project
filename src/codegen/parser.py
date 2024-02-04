@@ -200,15 +200,20 @@ class Parser:
             elem_score = elem[3]
             # actual address is BP + elem_loc
             self.semantic_stack.append([elem_loc, 'local'])
+            if elem_type == 'array':
+                self.semantic_stack[-1].append(None)
         elif self.symbol_table_heap[id] != []:
             elem = self.symbol_table_heap[id][-1]
             elem_loc = elem[0]
+            elem_type = elem[1]
             # actual address is elem_loc
             self.semantic_stack.append([elem_loc, 'global'])
+            if elem_type == 'array':
+                self.semantic_stack[-1].append(None)
             # print(self.semantic_stack)
         else:
-            # now we should handle function #Alliance
-            print(id, 'not defined or is a func') # handle later for semantic analysis
+            #Alliance
+            self.semantic_stack.append(id)
 
 
     def construct_address(self, addr, which, where): # addr is its address, which is either 'local' or 'global', where is the location we want actual address in
@@ -296,10 +301,53 @@ class Parser:
         self.semantci_stack.append(',')
 
     def prepare_call_action(self): # Alliance implements
-        pass
+        self.semantic_stack.append('$')
     
     def jump_action(self): # Alliance implements
-        pass
+        return_address_temp = self.get_temp_stack()
+        base_pointer_address_temp = self.get_temp_stack()
+        last_base_diff = self.base_pointer_diff
+        
+        params = []
+        while self.semantic_stack[-1] != '$':
+            params.append(self.semantic_stack.pop(-1))
+            
+        if not self.semantic_stack or self.semantic_stack[-1] != '$':
+            raise ValueError("Ridim")
+
+        self.semantic_stack.pop(-1)
+        function_name = self.semantic_stack.pop(-1)
+        
+        params = params[::-1]
+        
+        # TODO: semantic analysis, check function's signature
+        
+        for param in params:
+            loc = param[0]
+            which = param[1]
+            if len(param) == 2:
+                temp = self.get_temp_stack()
+                self.construct_address(loc, which, self.temp_addr)
+                self.construct_address(temp, 'local', self.temp_addr + self.word_size)
+                self.code_gen_list(["ASSIGN", f"@{self.temp_addr}", f"@{self.temp_addr + self.word_size}", ''])
+            elif len(params) == 3:
+                # TODO array
+                pass
+            else:
+                raise ValueError("There is something wrong here")
+
+        # sets the previous base pointer address
+        self.code_gen_list.append(["ADD", f"#{last_base_diff}", self.base_pointer_addr, self.base_pointer_addr])
+        self.construct_address(return_address_temp, 'local', self.temp_addr)
+        self.code_gen_list.append(["ASSIGN", f"#{len(self.code_gen_list)+1}", f"@{self.temp_addr}", ''])
+        # TODO check if function exists
+        self.code_gen_list.append(["JP", self.symbol_table_function[function_name]['start_point'], "", ""])
+        self.base_pointer_diff = last_base_diff - 2
+        if self.symbol_table_function[function_name]['return_type'] == 'int':
+            self.semantic_stack.append([self.base_pointer_diff, 'local'])
+            self.base_pointer_diff += 1
+        else:
+            self.semantic_stack.append(None)
     
     def pusharg_action(self): # Alliance implements
         pass
