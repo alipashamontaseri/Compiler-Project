@@ -166,8 +166,12 @@ class Parser:
                                    str(self.base_pointer_addr), '#4', str(self.temp_addr)])
         self.code_gen_list.append(["ASSIGN", 
                                    '@'+str(self.temp_addr), str(self.base_pointer_addr), ''])
+        
+        self.code_gen_list.append(["ASSIGN", 
+                                   '@'+str(self.stack_pointer_addr), str(self.temp_addr + 3 * self.word_size), ''])
+        
         self.code_gen_list.append(["JP", 
-                                   '@' + str(self.stack_pointer_addr), '', ''])
+                                   '@' + str(self.temp_addr + 3 * self.word_size), '', ''])
         
 
         # with ret
@@ -522,6 +526,9 @@ class Parser:
         self.code_gen_list.append(["ASSIGN", 
                                    '@'+str(self.temp_addr), str(self.base_pointer_addr), ''])
         
+        self.code_gen_list.append(["ASSIGN", 
+                                   '@' + str(self.temp_addr + 5 * self.word_size), '@' + str(self.temp_addr + 5 * self.word_size), ''])
+
         self.code_gen_list.append(["JP", 
                                    '@' + str(self.temp_addr + 5 * self.word_size), '', ''])
 
