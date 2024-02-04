@@ -385,13 +385,18 @@ class Parser:
         for param in params:
             loc = param[0]
             which = param[1]
+            
             if len(param) == 2:
                 temp = self.get_temp_stack()
                 self.construct_address(loc, which, self.temp_addr)
                 self.construct_address(temp, 'local', self.temp_addr + self.word_size)
                 self.code_gen_list.append(["ASSIGN", f"@{self.temp_addr}", f"@{self.temp_addr + self.word_size}", ''])
-            elif len(params) == 3:
+            elif len(param) == 3:
                 # TODO array
+                temp = self.get_temp_stack()
+                self.construct_address(loc, which, self.temp_addr)
+                self.construct_address(temp, 'local', self.temp_addr + self.word_size)
+                self.code_gen_list.append(["ASSIGN", f"{self.temp_addr}", f"@{self.temp_addr + self.word_size}", ''])
                 pass
             else:
                 raise ValueError("There is something wrong here")
