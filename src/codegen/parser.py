@@ -333,7 +333,7 @@ class Parser:
         base_pointer_address_temp = self.get_temp_stack()
         # sets the previous base pointer address
         self.construct_address(base_pointer_address_temp, 'local', self.temp_addr)
-        self.code_gen_list(["ASSIGN", f"{self.base_pointer_addr}", f"@{self.temp_addr}"])
+        self.code_gen_list.append(["ASSIGN", f"{self.base_pointer_addr}", f"@{self.temp_addr}" , ""])
         
         last_base_diff = self.base_pointer_diff
         
@@ -356,6 +356,7 @@ class Parser:
                 raise ValueError("Only integer values can be printed, not arrays!")
             self.construct_address(params[0][0], params[0][1], self.temp_addr)
             self.code_gen_list.append(["PRINT", f"@{self.temp_addr}", "", ""])
+            self.semantic_stack.append(None)
             return
         
         params = params[::-1]
@@ -525,7 +526,7 @@ class Parser:
                                    '@' + str(self.temp_addr + 5 * self.word_size), '', ''])
 
     def handle_actions(self, action):
-        # print(action)
+        print(action)
         if action == 'pnext':
             self.pnext_action()
         elif action == 'type':
@@ -585,7 +586,6 @@ class Parser:
         else:
             raise Exception('action not defined')
         
-        print(action)
         print(self.semantic_stack)
         print(len(self.code_gen_list))
         print(self.code_gen_list)
